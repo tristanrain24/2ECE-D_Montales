@@ -1,0 +1,27 @@
+#ALPHABET-SOUP PROBLEM
+
+def alpha_order(name):                                #define the function that sorts a string
+    return ''.join(sorted(name))                      #sort the string and convert from a list to a single string
+result = alpha_order("tristan")                       # create a variable for output
+print (result)                                        #print the output
+
+
+#EMOTICON PROBLEM
+def replace_emote(sentence):                                                            #define a function that replaces words with emoticons
+    emotes = { "smile" : ":)", "grin": ":D", "sad": ":((", "mad": ">:(" }              
+
+    for word, emote in emotes.items():                                                  #create a for loop that will replace the words in a string inputted by the user
+        sentence  = sentence.replace(word, emote)
+    return sentence                                                                
+
+sample = "i am mad"                                                                    
+sample_output = replace_emote(sample)                                                  #use the function to replace the word "mad" to the emoticon ">:("
+print (sample_output)                                                                  #print the output
+
+#UNPACKING LIST PROBLEM
+list = [1,2,3,4,5,6]                                                                  #create a list of numbers
+first = list[0]                                                                       #assign the variables values from the list 
+middle = list[1:-1]
+last = list[-1]
+
+print ("first: ", first, " Middle: ", middle, " Last: ", last)                          #print the output
