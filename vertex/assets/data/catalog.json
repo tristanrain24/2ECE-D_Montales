@@ -1,0 +1,1432 @@
+{
+ "version": 1,
+ "sample": true,
+ "lastFullPass": "Jul 2026",
+ "fields": [
+  {
+   "id": "eng",
+   "name": "Engineering",
+   "icon": "gear-six",
+   "subs": "CAD · Circuits · Structural",
+   "median": {
+    "accuracy": 78,
+    "speed": 61,
+    "value": 66,
+    "integrations": 55
+   }
+  },
+  {
+   "id": "med",
+   "name": "Medicine",
+   "icon": "heartbeat",
+   "subs": "Clinical · Imaging · Study",
+   "median": {
+    "accuracy": 81,
+    "speed": 58,
+    "value": 60,
+    "integrations": 48
+   }
+  },
+  {
+   "id": "res",
+   "name": "Research",
+   "icon": "flask",
+   "subs": "Literature · Methods",
+   "median": {
+    "accuracy": 76,
+    "speed": 64,
+    "value": 70,
+    "integrations": 52
+   }
+  },
+  {
+   "id": "law",
+   "name": "Legal",
+   "icon": "scales",
+   "subs": "Case law · Contracts",
+   "median": {
+    "accuracy": 74,
+    "speed": 55,
+    "value": 58,
+    "integrations": 44
+   }
+  },
+  {
+   "id": "fin",
+   "name": "Finance",
+   "icon": "chart-line-up",
+   "subs": "Modelling · Risk",
+   "median": {
+    "accuracy": 77,
+    "speed": 60,
+    "value": 63,
+    "integrations": 57
+   }
+  },
+  {
+   "id": "mkt",
+   "name": "Marketing",
+   "icon": "megaphone",
+   "subs": "SEO · Creative testing",
+   "median": {
+    "accuracy": 72,
+    "speed": 68,
+    "value": 74,
+    "integrations": 66
+   }
+  },
+  {
+   "id": "sal",
+   "name": "Sales",
+   "icon": "handshake",
+   "subs": "Pipeline intelligence",
+   "median": {
+    "accuracy": 70,
+    "speed": 66,
+    "value": 72,
+    "integrations": 60
+   }
+  },
+  {
+   "id": "sof",
+   "name": "Software",
+   "icon": "code",
+   "subs": "Systems · Low-level",
+   "median": {
+    "accuracy": 80,
+    "speed": 70,
+    "value": 68,
+    "integrations": 62
+   }
+  },
+  {
+   "id": "hr",
+   "name": "People",
+   "icon": "users-three",
+   "subs": "Structured hiring",
+   "median": {
+    "accuracy": 68,
+    "speed": 63,
+    "value": 71,
+    "integrations": 50
+   }
+  }
+ ],
+ "tools": [
+  {
+   "id": "solidum",
+   "name": "Solidum",
+   "field": "eng",
+   "sub": "CAD & mechanical design",
+   "tier": "A",
+   "price": "$39/mo",
+   "verdict": "The only CAD copilot that understands a constraint sketch instead of guessing at one. If you model parts for a living or a degree, take this and stop reading.",
+   "metrics": {
+    "accuracy": {
+     "score": 94,
+     "display": "94/100"
+    },
+    "speed": {
+     "score": 88,
+     "display": "1.8s median"
+    },
+    "value": {
+     "score": 72,
+     "display": "$39/mo"
+    },
+    "integrations": {
+     "score": 90,
+     "display": "14 native"
+    }
+   },
+   "wins": [
+    "Reads native SOLIDWORKS and Fusion trees",
+    "Flags interference before you regenerate"
+   ],
+   "losses": [
+    "Sheet-metal unfolding is still weak",
+    "No free tier for students"
+   ],
+   "integrations": [
+    "SOLIDWORKS",
+    "Fusion 360",
+    "Onshape",
+    "Inventor",
+    "NX"
+   ],
+   "integrationsMore": "+9 more",
+   "plans": [
+    {
+     "name": "Student",
+     "price": "$12/mo",
+     "note": ".edu verification"
+    },
+    {
+     "name": "Pro",
+     "price": "$39/mo",
+     "note": "Unlimited assemblies"
+    },
+    {
+     "name": "Team",
+     "price": "$95/seat",
+     "note": "Shared part library"
+    }
+   ],
+   "domain": "solidum.ai",
+   "evidence": "412 modelling tasks",
+   "tested": "Jul 2026",
+   "move": 2,
+   "tagline": "Model the part, not the software.",
+   "pitch": "A design copilot that reads your feature tree and argues with your tolerances before the shop does.",
+   "keywords": "cad mechanical modelling parts assembly tolerance drawings solidworks fusion design"
+  },
+  {
+   "id": "circuitry",
+   "name": "Circuitry",
+   "field": "eng",
+   "sub": "Schematic & PCB review",
+   "tier": "A",
+   "price": "$29/mo",
+   "verdict": "Catches the decoupling mistakes a third-year keeps making, and explains why. Slightly narrower than Solidum but it is the sharpest reviewer in electrical.",
+   "metrics": {
+    "accuracy": {
+     "score": 91,
+     "display": "91/100"
+    },
+    "speed": {
+     "score": 82,
+     "display": "2.4s median"
+    },
+    "value": {
+     "score": 81,
+     "display": "$29/mo"
+    },
+    "integrations": {
+     "score": 64,
+     "display": "8 native"
+    }
+   },
+   "wins": [
+    "DRC explanations in plain language",
+    "Reads KiCad and Altium projects directly"
+   ],
+   "losses": [
+    "RF layouts beyond 6 GHz are unreliable"
+   ],
+   "integrations": [
+    "KiCad",
+    "Altium",
+    "Eagle",
+    "LTspice"
+   ],
+   "integrationsMore": "+4 more",
+   "plans": [
+    {
+     "name": "Student",
+     "price": "Free",
+     "note": "2 projects"
+    },
+    {
+     "name": "Pro",
+     "price": "$29/mo",
+     "note": "Unlimited DRC"
+    },
+    {
+     "name": "Lab",
+     "price": "$70/seat",
+     "note": "Shared libraries"
+    }
+   ],
+   "domain": "circuitry.dev",
+   "evidence": "268 board reviews",
+   "tested": "Jul 2026",
+   "move": 0,
+   "tagline": "Your board, reviewed before it ships.",
+   "pitch": "Schematic and layout review that reads the datasheet so you do not have to.",
+   "keywords": "circuit schematic pcb board electrical electronics kicad altium layout design hardware"
+  },
+  {
+   "id": "femwise",
+   "name": "FEMwise",
+   "field": "eng",
+   "sub": "Simulation & FEA",
+   "tier": "B",
+   "price": "$55/mo",
+   "verdict": "Good mesh advice, weak physics intuition. Use it to set up a study faster — do not use it to decide whether the study is right.",
+   "metrics": {
+    "accuracy": {
+     "score": 84,
+     "display": "84/100"
+    },
+    "speed": {
+     "score": 59,
+     "display": "6.1s median"
+    },
+    "value": {
+     "score": 54,
+     "display": "$55/mo"
+    },
+    "integrations": {
+     "score": 47,
+     "display": "5 native"
+    }
+   },
+   "wins": [
+    "Mesh refinement suggestions are genuinely good",
+    "Explains convergence failures clearly"
+   ],
+   "losses": [
+    "Non-linear material models trip it up",
+    "Price is steep for what it does"
+   ],
+   "integrations": [
+    "Ansys",
+    "Abaqus",
+    "COMSOL"
+   ],
+   "integrationsMore": "+2 more",
+   "plans": [
+    {
+     "name": "Solo",
+     "price": "$55/mo",
+     "note": "3 solvers"
+    },
+    {
+     "name": "Lab",
+     "price": "$130/seat",
+     "note": "All solvers"
+    }
+   ],
+   "domain": "femwise.io",
+   "evidence": "147 studies",
+   "tested": "Jun 2026",
+   "move": -1,
+   "tagline": "Meshing, minus the guesswork.",
+   "pitch": "Set up a finite-element study in minutes and get told why it did not converge.",
+   "keywords": "simulation fea finite element mesh stress thermal ansys abaqus"
+  },
+  {
+   "id": "struxlab",
+   "name": "StruxLab",
+   "field": "eng",
+   "sub": "Structural code compliance",
+   "tier": "B",
+   "price": "$44/mo",
+   "verdict": "Solid on Eurocode, patchy on everything else. If you are working to EN standards it earns its keep; elsewhere check every citation.",
+   "metrics": {
+    "accuracy": {
+     "score": 80,
+     "display": "80/100"
+    },
+    "speed": {
+     "score": 71,
+     "display": "3.2s median"
+    },
+    "value": {
+     "score": 63,
+     "display": "$44/mo"
+    },
+    "integrations": {
+     "score": 38,
+     "display": "4 native"
+    }
+   },
+   "wins": [
+    "Eurocode clause citations are accurate",
+    "Handles load-combination tables well"
+   ],
+   "losses": [
+    "ACI and AS coverage is thin"
+   ],
+   "integrations": [
+    "Revit",
+    "Tekla",
+    "SAP2000"
+   ],
+   "integrationsMore": "+1 more",
+   "plans": [
+    {
+     "name": "Solo",
+     "price": "$44/mo",
+     "note": "Eurocode"
+    },
+    {
+     "name": "Practice",
+     "price": "$105/seat",
+     "note": "All codes"
+    }
+   ],
+   "domain": "struxlab.com",
+   "evidence": "96 checks",
+   "tested": "Jun 2026",
+   "move": 0,
+   "tagline": "Compliance you can cite.",
+   "pitch": "Structural checks that name the clause, not just the answer.",
+   "keywords": "structural civil eurocode concrete steel beams loads revit design"
+  },
+  {
+   "id": "toleranceiq",
+   "name": "ToleranceIQ",
+   "field": "eng",
+   "sub": "GD&T checking",
+   "tier": "C",
+   "price": "$19/mo",
+   "verdict": "One trick, done adequately. Only worth it if drawing callouts are the thing slowing you down.",
+   "metrics": {
+    "accuracy": {
+     "score": 71,
+     "display": "71/100"
+    },
+    "speed": {
+     "score": 78,
+     "display": "2.6s median"
+    },
+    "value": {
+     "score": 69,
+     "display": "$19/mo"
+    },
+    "integrations": {
+     "score": 24,
+     "display": "2 native"
+    }
+   },
+   "wins": [
+    "Cheap, and the datum logic is sound"
+   ],
+   "losses": [
+    "Nothing outside GD&T",
+    "No assembly context"
+   ],
+   "integrations": [
+    "SOLIDWORKS",
+    "Fusion 360"
+   ],
+   "integrationsMore": "",
+   "plans": [
+    {
+     "name": "Solo",
+     "price": "$19/mo",
+     "note": "Unlimited drawings"
+    }
+   ],
+   "domain": "toleranceiq.com",
+   "evidence": "61 drawings",
+   "tested": "May 2026",
+   "move": 0,
+   "tagline": "Callouts, checked.",
+   "pitch": "A narrow GD&T reviewer for drawing packages.",
+   "keywords": "gd&t tolerance dimensioning drawings callouts datum"
+  },
+  {
+   "id": "cortexa",
+   "name": "Cortexa MD",
+   "field": "med",
+   "sub": "Clinical reasoning",
+   "tier": "A",
+   "price": "$34/mo",
+   "verdict": "The best differential-diagnosis reasoner we have tested, and the only one that shows its evidence chain by default. For a medical student this is the one.",
+   "metrics": {
+    "accuracy": {
+     "score": 96,
+     "display": "96/100"
+    },
+    "speed": {
+     "score": 79,
+     "display": "2.9s median"
+    },
+    "value": {
+     "score": 74,
+     "display": "$34/mo"
+    },
+    "integrations": {
+     "score": 52,
+     "display": "6 native"
+    }
+   },
+   "wins": [
+    "Cites primary literature on every claim",
+    "Refuses confidently when evidence is thin"
+   ],
+   "losses": [
+    "Paediatric dosing is deliberately locked"
+   ],
+   "integrations": [
+    "UpToDate",
+    "PubMed",
+    "Epic (read)"
+   ],
+   "integrationsMore": "+3 more",
+   "plans": [
+    {
+     "name": "Student",
+     "price": "$14/mo",
+     "note": ".edu verification"
+    },
+    {
+     "name": "Clinician",
+     "price": "$34/mo",
+     "note": "Full corpus"
+    },
+    {
+     "name": "Department",
+     "price": "$88/seat",
+     "note": "Audit log"
+    }
+   ],
+   "domain": "cortexamd.com",
+   "evidence": "1,120 vignettes",
+   "tested": "Jul 2026",
+   "move": 1,
+   "tagline": "Reasoning you can check.",
+   "pitch": "Differential diagnosis with the evidence chain attached to every line.",
+   "keywords": "diagnosis differential clinical reasoning medicine doctor symptoms vignette"
+  },
+  {
+   "id": "radsecond",
+   "name": "RadSecond",
+   "field": "med",
+   "sub": "Imaging second read",
+   "tier": "A",
+   "price": "$120/mo",
+   "verdict": "Expensive and worth it in the two modalities it covers. Outside chest CT and mammography, look elsewhere.",
+   "metrics": {
+    "accuracy": {
+     "score": 93,
+     "display": "93/100"
+    },
+    "speed": {
+     "score": 86,
+     "display": "4.0s / study"
+    },
+    "value": {
+     "score": 41,
+     "display": "$120/mo"
+    },
+    "integrations": {
+     "score": 58,
+     "display": "7 native"
+    }
+   },
+   "wins": [
+    "Chest CT nodule sensitivity beats the field",
+    "PACS integration is genuinely turnkey"
+   ],
+   "losses": [
+    "Only two modalities",
+    "Priced for departments, not people"
+   ],
+   "integrations": [
+    "PACS",
+    "DICOMweb",
+    "Epic",
+    "Cerner"
+   ],
+   "integrationsMore": "+3 more",
+   "plans": [
+    {
+     "name": "Reader",
+     "price": "$120/mo",
+     "note": "2 modalities"
+    },
+    {
+     "name": "Department",
+     "price": "Custom",
+     "note": "Volume pricing"
+    }
+   ],
+   "domain": "radsecond.health",
+   "evidence": "3,400 studies",
+   "tested": "Jul 2026",
+   "move": 0,
+   "tagline": "A second pair of eyes, every study.",
+   "pitch": "Second-read support for chest CT and mammography, inside your PACS.",
+   "keywords": "radiology imaging scan chest ct mammography pacs dicom xray"
+  },
+  {
+   "id": "pharmacheck",
+   "name": "PharmaCheck",
+   "field": "med",
+   "sub": "Interactions & dosing",
+   "tier": "B",
+   "price": "$22/mo",
+   "verdict": "Reliable on interactions, cautious to the point of noise on dosing. Keep it as a check, not a source.",
+   "metrics": {
+    "accuracy": {
+     "score": 86,
+     "display": "86/100"
+    },
+    "speed": {
+     "score": 91,
+     "display": "0.9s median"
+    },
+    "value": {
+     "score": 78,
+     "display": "$22/mo"
+    },
+    "integrations": {
+     "score": 44,
+     "display": "5 native"
+    }
+   },
+   "wins": [
+    "Fastest lookup in the field",
+    "Interaction database updated weekly"
+   ],
+   "losses": [
+    "Over-flags benign combinations",
+    "Renal adjustment guidance is generic"
+   ],
+   "integrations": [
+    "Epic",
+    "Cerner",
+    "Micromedex"
+   ],
+   "integrationsMore": "+2 more",
+   "plans": [
+    {
+     "name": "Student",
+     "price": "Free",
+     "note": "Lookup only"
+    },
+    {
+     "name": "Pro",
+     "price": "$22/mo",
+     "note": "Full dosing"
+    }
+   ],
+   "domain": "pharmacheck.io",
+   "evidence": "840 pairs",
+   "tested": "Jun 2026",
+   "move": 0,
+   "tagline": "Check before you prescribe.",
+   "pitch": "Interaction and dosing lookup, updated weekly.",
+   "keywords": "pharmacy pharmacology dosing interactions prescribing drugs"
+  },
+  {
+   "id": "anatomi",
+   "name": "AnatomiTutor",
+   "field": "med",
+   "sub": "Study & recall",
+   "tier": "B",
+   "price": "$11/mo",
+   "verdict": "Built for exams, not for wards. As a spaced-repetition partner through pre-clinical years it is excellent value; it stops being useful the day you start clerkships.",
+   "metrics": {
+    "accuracy": {
+     "score": 82,
+     "display": "82/100"
+    },
+    "speed": {
+     "score": 84,
+     "display": "1.5s median"
+    },
+    "value": {
+     "score": 92,
+     "display": "$11/mo"
+    },
+    "integrations": {
+     "score": 31,
+     "display": "3 native"
+    }
+   },
+   "wins": [
+    "Best-in-field question generation",
+    "Cheapest credible option in medicine"
+   ],
+   "losses": [
+    "No clinical decision support",
+    "3D atlas is licensed, not native"
+   ],
+   "integrations": [
+    "Anki",
+    "Notion",
+    "Google Classroom"
+   ],
+   "integrationsMore": "",
+   "plans": [
+    {
+     "name": "Student",
+     "price": "$11/mo",
+     "note": "Everything"
+    },
+    {
+     "name": "Cohort",
+     "price": "$7/seat",
+     "note": "20+ students"
+    }
+   ],
+   "domain": "anatomitutor.com",
+   "evidence": "520 items",
+   "tested": "Jul 2026",
+   "move": 1,
+   "tagline": "Pass the exam. Then keep it.",
+   "pitch": "Spaced repetition and question generation for pre-clinical medicine.",
+   "keywords": "anatomy study recall revision flashcards exam usmle student spaced repetition"
+  },
+  {
+   "id": "chartscribe",
+   "name": "ChartScribe",
+   "field": "med",
+   "sub": "Clinical notes",
+   "tier": "C",
+   "price": "$60/mo",
+   "verdict": "The transcription is fine. The structured output is not, and at this price fine is not enough.",
+   "metrics": {
+    "accuracy": {
+     "score": 74,
+     "display": "74/100"
+    },
+    "speed": {
+     "score": 66,
+     "display": "5.5s median"
+    },
+    "value": {
+     "score": 38,
+     "display": "$60/mo"
+    },
+    "integrations": {
+     "score": 60,
+     "display": "7 native"
+    }
+   },
+   "wins": [
+    "Ambient capture works in noisy rooms"
+   ],
+   "losses": [
+    "SOAP structuring needs heavy editing",
+    "Priced above better tools"
+   ],
+   "integrations": [
+    "Epic",
+    "Cerner",
+    "Athena"
+   ],
+   "integrationsMore": "+4 more",
+   "plans": [
+    {
+     "name": "Solo",
+     "price": "$60/mo",
+     "note": "Unlimited encounters"
+    }
+   ],
+   "domain": "chartscribe.md",
+   "evidence": "210 encounters",
+   "tested": "May 2026",
+   "move": -1,
+   "tagline": "Notes, written while you talk.",
+   "pitch": "Ambient clinical documentation for the exam room.",
+   "keywords": "notes scribe documentation transcription dictation soap"
+  },
+  {
+   "id": "lensward",
+   "name": "Lensward",
+   "field": "res",
+   "sub": "Literature synthesis",
+   "tier": "A",
+   "price": "$25/mo",
+   "verdict": "It will not invent a citation. That single property makes it the default for anyone writing a literature review.",
+   "metrics": {
+    "accuracy": {
+     "score": 92,
+     "display": "92/100"
+    },
+    "speed": {
+     "score": 74,
+     "display": "3.6s median"
+    },
+    "value": {
+     "score": 83,
+     "display": "$25/mo"
+    },
+    "integrations": {
+     "score": 70,
+     "display": "9 native"
+    }
+   },
+   "wins": [
+    "Zero fabricated references across our whole test set",
+    "Traces claims back to the exact paragraph"
+   ],
+   "losses": [
+    "Paywalled corpora depend on your library access"
+   ],
+   "integrations": [
+    "Zotero",
+    "Mendeley",
+    "arXiv",
+    "Semantic Scholar",
+    "Overleaf"
+   ],
+   "integrationsMore": "+4 more",
+   "plans": [
+    {
+     "name": "Student",
+     "price": "$9/mo",
+     "note": ".edu verification"
+    },
+    {
+     "name": "Researcher",
+     "price": "$25/mo",
+     "note": "Unlimited syntheses"
+    },
+    {
+     "name": "Lab",
+     "price": "$60/seat",
+     "note": "Shared collections"
+    }
+   ],
+   "domain": "lensward.org",
+   "evidence": "690 reviews",
+   "tested": "Jul 2026",
+   "move": 0,
+   "tagline": "Every claim, traced.",
+   "pitch": "Literature synthesis that shows you the paragraph it came from.",
+   "keywords": "literature review synthesis papers citations research systematic"
+  },
+  {
+   "id": "replicate",
+   "name": "Replicate Lab",
+   "field": "res",
+   "sub": "Methods & statistics",
+   "tier": "B",
+   "price": "$32/mo",
+   "verdict": "Strong on study design, ordinary on analysis. Bring it into the planning meeting, not the results section.",
+   "metrics": {
+    "accuracy": {
+     "score": 85,
+     "display": "85/100"
+    },
+    "speed": {
+     "score": 68,
+     "display": "4.4s median"
+    },
+    "value": {
+     "score": 66,
+     "display": "$32/mo"
+    },
+    "integrations": {
+     "score": 49,
+     "display": "5 native"
+    }
+   },
+   "wins": [
+    "Power calculations and pre-registration drafting",
+    "Spots the underpowered design early"
+   ],
+   "losses": [
+    "Bayesian workflows are shallow"
+   ],
+   "integrations": [
+    "R",
+    "Python",
+    "OSF"
+   ],
+   "integrationsMore": "+2 more",
+   "plans": [
+    {
+     "name": "Researcher",
+     "price": "$32/mo",
+     "note": "Unlimited studies"
+    },
+    {
+     "name": "Lab",
+     "price": "$78/seat",
+     "note": "Team review"
+    }
+   ],
+   "domain": "replicatelab.io",
+   "evidence": "184 protocols",
+   "tested": "Jun 2026",
+   "move": 0,
+   "tagline": "Design the study properly.",
+   "pitch": "Methods review and power analysis before you collect anything.",
+   "keywords": "methods statistics power analysis study design preregistration reproducibility"
+  },
+  {
+   "id": "citeguard",
+   "name": "CiteGuard",
+   "field": "res",
+   "sub": "Citation integrity",
+   "tier": "B",
+   "price": "$14/mo",
+   "verdict": "A narrow safety net, priced like one. Run your manuscript through it before submission and forget about it otherwise.",
+   "metrics": {
+    "accuracy": {
+     "score": 81,
+     "display": "81/100"
+    },
+    "speed": {
+     "score": 88,
+     "display": "1.2s median"
+    },
+    "value": {
+     "score": 87,
+     "display": "$14/mo"
+    },
+    "integrations": {
+     "score": 36,
+     "display": "4 native"
+    }
+   },
+   "wins": [
+    "Retraction checking is thorough",
+    "Fast enough to run on every draft"
+   ],
+   "losses": [
+    "Does not evaluate whether the citation supports the claim"
+   ],
+   "integrations": [
+    "Zotero",
+    "Overleaf",
+    "Word"
+   ],
+   "integrationsMore": "+1 more",
+   "plans": [
+    {
+     "name": "Solo",
+     "price": "$14/mo",
+     "note": "Unlimited manuscripts"
+    }
+   ],
+   "domain": "citeguard.app",
+   "evidence": "320 manuscripts",
+   "tested": "Jul 2026",
+   "move": 1,
+   "tagline": "Do not cite a retraction.",
+   "pitch": "Reference integrity and retraction checking for manuscripts.",
+   "keywords": "citations references retraction integrity manuscript plagiarism"
+  },
+  {
+   "id": "precedent",
+   "name": "Precedent",
+   "field": "law",
+   "sub": "Case-law research",
+   "tier": "A",
+   "price": "$89/mo",
+   "verdict": "The citator is real and the pincites are correct. In a field full of confident nonsense, that makes it the only defensible choice.",
+   "metrics": {
+    "accuracy": {
+     "score": 90,
+     "display": "90/100"
+    },
+    "speed": {
+     "score": 72,
+     "display": "3.8s median"
+    },
+    "value": {
+     "score": 59,
+     "display": "$89/mo"
+    },
+    "integrations": {
+     "score": 51,
+     "display": "6 native"
+    }
+   },
+   "wins": [
+    "Verified pincites on every proposition",
+    "Good-law flags updated daily"
+   ],
+   "losses": [
+    "England & Wales and US only"
+   ],
+   "integrations": [
+    "Westlaw",
+    "LexisNexis",
+    "Clio"
+   ],
+   "integrationsMore": "+3 more",
+   "plans": [
+    {
+     "name": "Solo",
+     "price": "$89/mo",
+     "note": "2 jurisdictions"
+    },
+    {
+     "name": "Firm",
+     "price": "$180/seat",
+     "note": "All jurisdictions"
+    }
+   ],
+   "domain": "precedent.legal",
+   "evidence": "470 queries",
+   "tested": "Jul 2026",
+   "move": 0,
+   "tagline": "Cite it with a straight face.",
+   "pitch": "Case-law research with verified pincites and daily good-law flags.",
+   "keywords": "case law legal research litigation pincite jurisdiction"
+  },
+  {
+   "id": "clausewise",
+   "name": "Clausewise",
+   "field": "law",
+   "sub": "Contract review",
+   "tier": "B",
+   "price": "$49/mo",
+   "verdict": "Fine for a first pass over standard commercial paper. It will miss the clause that matters in anything bespoke.",
+   "metrics": {
+    "accuracy": {
+     "score": 83,
+     "display": "83/100"
+    },
+    "speed": {
+     "score": 76,
+     "display": "3.0s median"
+    },
+    "value": {
+     "score": 71,
+     "display": "$49/mo"
+    },
+    "integrations": {
+     "score": 55,
+     "display": "6 native"
+    }
+   },
+   "wins": [
+    "Redline suggestions follow house style",
+    "Handles long MSAs without losing the thread"
+   ],
+   "losses": [
+    "Weak on unusual indemnity structures"
+   ],
+   "integrations": [
+    "Word",
+    "DocuSign",
+    "Ironclad"
+   ],
+   "integrationsMore": "+3 more",
+   "plans": [
+    {
+     "name": "Solo",
+     "price": "$49/mo",
+     "note": "40 contracts"
+    },
+    {
+     "name": "Team",
+     "price": "$110/seat",
+     "note": "Unlimited"
+    }
+   ],
+   "domain": "clausewise.co",
+   "evidence": "260 contracts",
+   "tested": "Jun 2026",
+   "move": 0,
+   "tagline": "The first pass, handled.",
+   "pitch": "Contract review and redlining for commercial agreements.",
+   "keywords": "contract review redline agreements msa clauses legal"
+  },
+  {
+   "id": "ledgerline",
+   "name": "Ledgerline",
+   "field": "fin",
+   "sub": "Financial modelling",
+   "tier": "A",
+   "price": "$65/mo",
+   "verdict": "It builds a model you can actually audit — every formula traceable, no hidden hardcodes. That is rarer than it should be.",
+   "metrics": {
+    "accuracy": {
+     "score": 89,
+     "display": "89/100"
+    },
+    "speed": {
+     "score": 80,
+     "display": "2.7s median"
+    },
+    "value": {
+     "score": 70,
+     "display": "$65/mo"
+    },
+    "integrations": {
+     "score": 84,
+     "display": "12 native"
+    }
+   },
+   "wins": [
+    "No hardcoded values in generated models",
+    "Traces every driver back to a source"
+   ],
+   "losses": [
+    "Opinionated about model structure"
+   ],
+   "integrations": [
+    "Excel",
+    "Google Sheets",
+    "NetSuite",
+    "QuickBooks",
+    "Xero"
+   ],
+   "integrationsMore": "+7 more",
+   "plans": [
+    {
+     "name": "Analyst",
+     "price": "$65/mo",
+     "note": "Unlimited models"
+    },
+    {
+     "name": "Team",
+     "price": "$140/seat",
+     "note": "Shared drivers"
+    }
+   ],
+   "domain": "ledgerline.finance",
+   "evidence": "190 models",
+   "tested": "Jul 2026",
+   "move": 1,
+   "tagline": "A model you can audit.",
+   "pitch": "Financial models with traceable drivers and no hidden hardcodes.",
+   "keywords": "financial modelling forecasting valuation excel accounting dcf"
+  },
+  {
+   "id": "riskframe",
+   "name": "RiskFrame",
+   "field": "fin",
+   "sub": "Risk memos",
+   "tier": "C",
+   "price": "$75/mo",
+   "verdict": "Writes a confident memo about risks it has not actually quantified. Skip it.",
+   "metrics": {
+    "accuracy": {
+     "score": 72,
+     "display": "72/100"
+    },
+    "speed": {
+     "score": 63,
+     "display": "5.9s median"
+    },
+    "value": {
+     "score": 34,
+     "display": "$75/mo"
+    },
+    "integrations": {
+     "score": 42,
+     "display": "5 native"
+    }
+   },
+   "wins": [
+    "Memo formatting is clean"
+   ],
+   "losses": [
+    "Quantitative backing is thin",
+    "Overconfident language by default"
+   ],
+   "integrations": [
+    "Excel",
+    "Bloomberg"
+   ],
+   "integrationsMore": "+3 more",
+   "plans": [
+    {
+     "name": "Analyst",
+     "price": "$75/mo",
+     "note": "Unlimited memos"
+    }
+   ],
+   "domain": "riskframe.io",
+   "evidence": "88 memos",
+   "tested": "May 2026",
+   "move": -2,
+   "tagline": "Risk, written up.",
+   "pitch": "Automated risk memoranda for investment committees.",
+   "keywords": "risk memo compliance investment committee"
+  },
+  {
+   "id": "longform",
+   "name": "Longform",
+   "field": "mkt",
+   "sub": "SEO & content ops",
+   "tier": "B",
+   "price": "$49/mo",
+   "verdict": "The best of a crowded, samey field. Nothing here is remarkable, but nothing is broken either.",
+   "metrics": {
+    "accuracy": {
+     "score": 84,
+     "display": "84/100"
+    },
+    "speed": {
+     "score": 81,
+     "display": "2.2s median"
+    },
+    "value": {
+     "score": 76,
+     "display": "$49/mo"
+    },
+    "integrations": {
+     "score": 88,
+     "display": "16 native"
+    }
+   },
+   "wins": [
+    "Brief-to-draft workflow is well designed",
+    "Integrates with everything"
+   ],
+   "losses": [
+    "Output still reads like output"
+   ],
+   "integrations": [
+    "WordPress",
+    "HubSpot",
+    "Webflow",
+    "Ahrefs",
+    "Notion"
+   ],
+   "integrationsMore": "+11 more",
+   "plans": [
+    {
+     "name": "Solo",
+     "price": "$49/mo",
+     "note": "30 articles"
+    },
+    {
+     "name": "Team",
+     "price": "$120/seat",
+     "note": "Unlimited"
+    }
+   ],
+   "domain": "longform.so",
+   "evidence": "340 briefs",
+   "tested": "Jul 2026",
+   "move": 0,
+   "tagline": "Brief in, draft out.",
+   "pitch": "Content operations from keyword brief to published draft.",
+   "keywords": "seo content writing blog articles marketing copy"
+  },
+  {
+   "id": "adjoint",
+   "name": "Adjoint",
+   "field": "mkt",
+   "sub": "Creative testing",
+   "tier": "C",
+   "price": "$99/mo",
+   "verdict": "Generates variants faster than you can test them, which is precisely the wrong bottleneck to solve.",
+   "metrics": {
+    "accuracy": {
+     "score": 70,
+     "display": "70/100"
+    },
+    "speed": {
+     "score": 89,
+     "display": "1.1s median"
+    },
+    "value": {
+     "score": 44,
+     "display": "$99/mo"
+    },
+    "integrations": {
+     "score": 72,
+     "display": "10 native"
+    }
+   },
+   "wins": [
+    "Very fast variant generation"
+   ],
+   "losses": [
+    "Predicted performance barely correlates with actual",
+    "Expensive for what it is"
+   ],
+   "integrations": [
+    "Meta Ads",
+    "Google Ads",
+    "TikTok"
+   ],
+   "integrationsMore": "+7 more",
+   "plans": [
+    {
+     "name": "Growth",
+     "price": "$99/mo",
+     "note": "5 accounts"
+    }
+   ],
+   "domain": "adjoint.ad",
+   "evidence": "150 campaigns",
+   "tested": "Jun 2026",
+   "move": -1,
+   "tagline": "A hundred variants by lunch.",
+   "pitch": "Creative generation and predicted-performance scoring for paid social.",
+   "keywords": "creative testing ads advertising variants paid social campaigns design"
+  },
+  {
+   "id": "pipeworks",
+   "name": "Pipeworks",
+   "field": "sal",
+   "sub": "Pipeline intelligence",
+   "tier": "B",
+   "price": "$58/mo",
+   "verdict": "The forecast is honest, which sales teams rarely want and usually need. Good tool, uncomfortable tool.",
+   "metrics": {
+    "accuracy": {
+     "score": 82,
+     "display": "82/100"
+    },
+    "speed": {
+     "score": 77,
+     "display": "2.8s median"
+    },
+    "value": {
+     "score": 68,
+     "display": "$58/mo"
+    },
+    "integrations": {
+     "score": 79,
+     "display": "11 native"
+    }
+   },
+   "wins": [
+    "Forecast accuracy holds up over a quarter",
+    "Flags stalled deals early"
+   ],
+   "losses": [
+    "Needs six months of clean CRM data first"
+   ],
+   "integrations": [
+    "Salesforce",
+    "HubSpot",
+    "Gong",
+    "Slack"
+   ],
+   "integrationsMore": "+7 more",
+   "plans": [
+    {
+     "name": "Rep",
+     "price": "$58/mo",
+     "note": "Personal pipeline"
+    },
+    {
+     "name": "Team",
+     "price": "$125/seat",
+     "note": "Forecast rollup"
+    }
+   ],
+   "domain": "pipeworks.sales",
+   "evidence": "96 pipelines",
+   "tested": "Jun 2026",
+   "move": 0,
+   "tagline": "A forecast you can defend.",
+   "pitch": "Pipeline scoring and forecasting on top of your CRM.",
+   "keywords": "forecasting pipeline crm quota deals revenue sales"
+  },
+  {
+   "id": "kernelsmith",
+   "name": "Kernelsmith",
+   "field": "sof",
+   "sub": "Systems & low-level",
+   "tier": "A",
+   "price": "$42/mo",
+   "verdict": "Understands memory the way a general assistant does not. If you write C, Rust or anything close to the metal, this is a different category of help.",
+   "metrics": {
+    "accuracy": {
+     "score": 93,
+     "display": "93/100"
+    },
+    "speed": {
+     "score": 85,
+     "display": "2.0s median"
+    },
+    "value": {
+     "score": 79,
+     "display": "$42/mo"
+    },
+    "integrations": {
+     "score": 75,
+     "display": "10 native"
+    }
+   },
+   "wins": [
+    "Reasons correctly about lifetimes and aliasing",
+    "Reads disassembly and explains it"
+   ],
+   "losses": [
+    "Deliberately unhelpful for front-end work"
+   ],
+   "integrations": [
+    "VS Code",
+    "Neovim",
+    "GDB",
+    "Clang",
+    "Cargo"
+   ],
+   "integrationsMore": "+5 more",
+   "plans": [
+    {
+     "name": "Student",
+     "price": "Free",
+     "note": ".edu verification"
+    },
+    {
+     "name": "Pro",
+     "price": "$42/mo",
+     "note": "Unlimited repos"
+    },
+    {
+     "name": "Team",
+     "price": "$96/seat",
+     "note": "Shared context"
+    }
+   ],
+   "domain": "kernelsmith.dev",
+   "evidence": "510 tasks",
+   "tested": "Jul 2026",
+   "move": 1,
+   "tagline": "Close to the metal.",
+   "pitch": "A systems-programming assistant that reads disassembly and reasons about lifetimes.",
+   "keywords": "systems code programming rust c low-level kernel memory debugging"
+  },
+  {
+   "id": "hirelight",
+   "name": "Hirelight",
+   "field": "hr",
+   "sub": "Structured hiring",
+   "tier": "B",
+   "price": "$38/mo",
+   "verdict": "Makes interview scoring consistent, which is most of the battle. It will not tell you who to hire, and it is right not to.",
+   "metrics": {
+    "accuracy": {
+     "score": 79,
+     "display": "79/100"
+    },
+    "speed": {
+     "score": 74,
+     "display": "3.1s median"
+    },
+    "value": {
+     "score": 73,
+     "display": "$38/mo"
+    },
+    "integrations": {
+     "score": 66,
+     "display": "8 native"
+    }
+   },
+   "wins": [
+    "Rubric consistency across interviewers",
+    "Bias-flagging on written feedback"
+   ],
+   "losses": [
+    "No sourcing or scheduling"
+   ],
+   "integrations": [
+    "Greenhouse",
+    "Lever",
+    "Ashby",
+    "Slack"
+   ],
+   "integrationsMore": "+4 more",
+   "plans": [
+    {
+     "name": "Team",
+     "price": "$38/mo",
+     "note": "5 interviewers"
+    },
+    {
+     "name": "Company",
+     "price": "$90/seat",
+     "note": "Unlimited"
+    }
+   ],
+   "domain": "hirelight.hr",
+   "evidence": "240 loops",
+   "tested": "Jun 2026",
+   "move": 0,
+   "tagline": "Score the interview, not the vibe.",
+   "pitch": "Structured interview scoring with rubric consistency built in.",
+   "keywords": "hiring interview recruiting scoring rubric candidates people"
+  }
+ ]
+}

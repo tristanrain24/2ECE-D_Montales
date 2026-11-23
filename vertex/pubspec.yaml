@@ -1,0 +1,63 @@
+name: vertex
+description: "Vertex — the field-ranked AI index. One rated pick per field."
+publish_to: 'none'
+version: 1.0.0+1
+
+environment:
+  sdk: ^3.14.0
+
+dependencies:
+  flutter:
+    sdk: flutter
+  http: ^1.6.0
+  material_ui: ^1.1.0
+  shared_preferences: ^2.5.6
+  url_launcher: ^6.3.3
+
+dev_dependencies:
+  flutter_test:
+    sdk: flutter
+  flutter_lints: ^6.0.0
+  flutter_launcher_icons: ^0.14.4
+
+flutter:
+  uses-material-design: true
+  assets:
+    - assets/data/catalog.json
+    - assets/fonts/Inter-LICENSE.txt
+    - assets/fonts/Phosphor-LICENSE.txt
+  fonts:
+    - family: Inter
+      fonts:
+        - asset: assets/fonts/Inter-Regular.ttf
+          weight: 400
+        - asset: assets/fonts/Inter-Medium.ttf
+          weight: 500
+        - asset: assets/fonts/Inter-SemiBold.ttf
+          weight: 600
+    - family: Phosphor
+      fonts:
+        - asset: assets/fonts/Phosphor.ttf
+    - family: Phosphor-Fill
+      fonts:
+        - asset: assets/fonts/Phosphor-Fill.ttf
+
+flutter_launcher_icons:
+  image_path: "assets/brand/icon.png"
+  android: "ic_launcher"
+  adaptive_icon_background: "#2b2741"
+  adaptive_icon_foreground: "assets/brand/icon_foreground.png"
+  ios: true
+  remove_alpha_ios: true
+  web:
+    generate: true
+    image_path: "assets/brand/icon.png"
+    background_color: "#e4e7f5"
+    theme_color: "#2b2741"
+  windows:
+    generate: true
+    image_path: "assets/brand/icon.png"
+    icon_size: 256
+  macos:
+    generate: true
+    image_path: "assets/brand/icon_macos.png"
