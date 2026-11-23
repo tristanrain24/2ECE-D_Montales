@@ -8,13 +8,37 @@ import 'package:vertex/state/app_state.dart';
 
 import 'logic_test.dart' show loadCatalog;
 
-Future<AppState> newState(Storage storage, {DateTime? at}) => AppState.load(
-  catalog: loadCatalog(),
-  storage: storage,
-  payments: DemoPaymentGateway(delay: Duration.zero),
-  verifier: DemoStudentVerifier(delay: Duration.zero),
-  clock: () => at ?? DateTime(2026, 11, 16),
-);
+class FakeLinks implements LinkOpener {
+  FakeLinks({this.ok = true});
+  final bool ok;
+  final opened = <Uri>[];
+  @override
+  Future<bool> open(Uri uri) async {
+    opened.add(uri);
+    return ok;
+  }
+}
+
+Future<AppState> newState(Storage storage, {LinkOpener? links}) =>
+    AppState.load(
+      catalog: loadCatalog(),
+      storage: storage,
+      links: links ?? FakeLinks(),
+      clock: () => DateTime(2026, 11, 16),
+    );
+
+/// The bundled catalog with only [keep] tools left in it.
+Catalog trimmed(List<String> keep) {
+  final full = loadCatalog();
+  final tools = full.tools.where((t) => keep.contains(t.id)).toList();
+  return Catalog(
+    fields: full.fields
+        .where((f) => tools.any((t) => t.fieldId == f.id))
+        .toList(),
+    tools: tools,
+    lastFullPass: 'Aug 2026',
+  );
+}
 
 void main() {
   test('starts in onboarding and finishes into the chosen field', () async {
@@ -38,14 +62,6 @@ void main() {
     s.toggleSaved('solidum');
     s.toggleCompare('solidum');
     s.toggleCompare('circuitry');
-    final tool = s.catalog.tool('solidum')!;
-    s.recordPurchase(
-      tool: tool,
-      plan: tool.plans.first,
-      billing: Billing.monthly,
-      seats: 1,
-      method: 'Card',
-    );
     s.addReview(
       Review(
         toolId: 'solidum',
@@ -53,13 +69,6 @@ void main() {
         useCase: 'Gearbox',
         body: 'Caught two interference errors.',
         createdAt: s.now(),
-      ),
-    );
-    s.setStudent(
-      StudentStatus(
-        email: 'maya@mit.edu',
-        institution: 'MIT',
-        verifiedAt: s.now(),
       ),
     );
     await s.flushed;
@@ -71,10 +80,7 @@ void main() {
     expect(r.themeMode, ThemeMode.dark);
     expect(r.saved, ['solidum']);
     expect(r.compare, ['solidum', 'circuitry']);
-    expect(r.purchaseFor('solidum')!.amountCents, 1200);
-    expect(r.purchaseFor('solidum')!.renewsAt, DateTime(2026, 12, 16));
     expect(r.reviewsFor('solidum').single.verdict, ReviewVerdict.take);
-    expect(r.studentVerified, isTrue);
     r.dispose();
   });
 
@@ -88,9 +94,15 @@ void main() {
         'fieldId': 'gone',
         'saved': ['solidum', 'deleted-tool'],
         'compare': ['a', 'b'],
+        // Left over from versions with in-app checkout.
+        'purchases': [
+          {'toolId': 'solidum'},
+        ],
+        'student': {'email': 'a@mit.edu'},
       }),
     );
     final r = await newState(stale);
+    expect(r.inIntro, isFalse);
     expect(r.field.id, 'eng');
     expect(r.saved, ['solidum']);
     expect(r.compare, isEmpty);
@@ -131,51 +143,43 @@ void main() {
     s.dispose();
   });
 
-  test(
-    'changing plan keeps the licence key; cancelling keeps access',
-    () async {
-      final s = await newState(MemoryStorage());
-      final tool = s.catalog.tool('solidum')!;
-      final a = s.recordPurchase(
-        tool: tool,
-        plan: tool.plans[1],
-        billing: Billing.monthly,
-        seats: 1,
-        method: 'Card',
-      );
-      final b = s.recordPurchase(
-        tool: tool,
-        plan: tool.plans[2],
-        billing: Billing.annual,
-        seats: 3,
-        method: 'Card',
-      );
-      expect(s.purchases, hasLength(1));
-      expect(b.licenceKey, a.licenceKey);
-      expect(b.amountCents, (9500 * 3 * 12 * 0.8).round());
-      expect(b.renewsAt, DateTime(2027, 11, 16));
-      s.cancelPurchase('solidum');
-      expect(s.purchaseFor('solidum')!.isActive, isFalse);
-      s.dispose();
-    },
-  );
-
-  test('student status lapses after a year', () async {
+  test('a newly published catalog replaces the old one cleanly', () async {
     final store = MemoryStorage();
     final s = await newState(store);
-    s.setStudent(
-      StudentStatus(
-        email: 'a@mit.edu',
-        institution: 'MIT',
-        verifiedAt: DateTime(2026, 1, 1),
-      ),
-    );
-    expect(s.studentVerified, isTrue);
+    s.finishIntro();
+    s.setField('law');
+    s.toggleSaved('precedent');
+    s.toggleSaved('solidum');
+    s.toggleCompare('solidum');
+    s.openField('law');
+    s.openTool('precedent');
+    s.replaceCatalog(trimmed(['solidum', 'circuitry']));
+    expect(s.catalog.lastFullPass, 'Aug 2026');
+    expect(s.field.id, 'eng');
+    expect(s.saved, ['solidum']);
+    expect(s.compare, ['solidum']);
+    expect(s.stack, isEmpty);
+    expect(s.ranked.map((t) => t.id), ['solidum', 'circuitry']);
     await s.flushed;
+    expect(jsonDecode(store.value!)['saved'], ['solidum']);
     s.dispose();
-    final later = await newState(store, at: DateTime(2027, 1, 2));
-    expect(later.studentVerified, isFalse);
-    later.dispose();
+  });
+
+  test('visiting a vendor opens its partner link', () async {
+    final links = FakeLinks();
+    final s = await newState(MemoryStorage(), links: links);
+    await s.visitVendor(s.catalog.tool('solidum')!);
+    expect(links.opened.single.toString(), 'https://solidum.ai');
+    expect(s.toast.value, isNull);
+    s.dispose();
+
+    final failing = await newState(
+      MemoryStorage(),
+      links: FakeLinks(ok: false),
+    );
+    await failing.visitVendor(failing.catalog.tool('solidum')!);
+    expect(failing.toast.value, 'Couldn’t open solidum.ai');
+    failing.dispose();
   });
 
   test('reset wipes storage and returns to onboarding', () async {

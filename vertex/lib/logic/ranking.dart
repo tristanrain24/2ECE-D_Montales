@@ -84,7 +84,7 @@ String leadPrice(Tool t, Role? role) {
         )
         .firstOrNull;
     if (p != null) {
-      return p.requiresStudent ? '${p.price} with student email' : p.price;
+      return p.requiresStudent ? '${p.price} for students' : p.price;
     }
   }
   if (role == Role.team) {
@@ -92,21 +92,6 @@ String leadPrice(Tool t, Role? role) {
     if (p != null) return '${p.price} · team';
   }
   return 'From ${t.plans.first.price}';
-}
-
-/// The plan checkout pre-selects for a role.
-Plan defaultPlan(Tool t, Role? role) {
-  final buyable = t.plans.where((p) => !p.isCustom).toList();
-  if (buyable.isEmpty) return t.plans.first;
-  if (role == Role.student) {
-    final p = buyable.where((p) => p.requiresStudent).firstOrNull;
-    if (p != null) return p;
-  }
-  if (role == Role.team) {
-    final p = buyable.where((p) => p.isTeamPlan).firstOrNull;
-    if (p != null) return p;
-  }
-  return buyable.where((p) => !p.requiresStudent).firstOrNull ?? buyable.first;
 }
 
 class CompareRow {

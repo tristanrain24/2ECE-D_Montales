@@ -110,8 +110,7 @@ ScreenSpec _specFor(BuildContext context, AppState s) {
     VxTab.you => ScreenSpec(
       key: 'you',
       title: 'You',
-      subtitle:
-          s.student?.email ?? s.role?.label ?? 'Plans, status and settings',
+      subtitle: s.role?.label ?? 'Reviews and settings',
       body: const YouScreen(),
     ),
   };

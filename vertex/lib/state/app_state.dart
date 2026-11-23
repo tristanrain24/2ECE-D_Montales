@@ -4,7 +4,6 @@ import 'dart:convert';
 import 'package:material_ui/material_ui.dart';
 
 import '../data/models.dart';
-import '../logic/format.dart';
 import '../logic/ranking.dart';
 import '../services/services.dart';
 
@@ -48,30 +47,26 @@ class AppState extends ChangeNotifier {
   AppState({
     required this.catalog,
     required this.storage,
-    required this.payments,
-    required this.verifier,
+    this.links = const SystemLinkOpener(),
     DateTime Function()? clock,
   }) : now = clock ?? DateTime.now,
        fieldId = catalog.fields.first.id;
 
-  final Catalog catalog;
+  Catalog catalog;
   final Storage storage;
-  final PaymentGateway payments;
-  final StudentVerifier verifier;
+  final LinkOpener links;
   final DateTime Function() now;
 
   static Future<AppState> load({
     required Catalog catalog,
     required Storage storage,
-    required PaymentGateway payments,
-    required StudentVerifier verifier,
+    LinkOpener links = const SystemLinkOpener(),
     DateTime Function()? clock,
   }) async {
     final s = AppState(
       catalog: catalog,
       storage: storage,
-      payments: payments,
-      verifier: verifier,
+      links: links,
       clock: clock,
     );
     try {
@@ -91,9 +86,7 @@ class AppState extends ChangeNotifier {
   ThemeMode themeMode = ThemeMode.system;
   List<String> saved = [];
   List<String> compare = [];
-  List<Purchase> purchases = [];
   List<Review> reviews = [];
-  StudentStatus? student;
 
   // ───────── session ─────────
 
@@ -117,8 +110,6 @@ class AppState extends ChangeNotifier {
   bool get filterActive =>
       tierFilter != TierFilter.any || priceFilter != PriceFilter.any;
 
-  bool get studentVerified => student?.isValidAt(now()) ?? false;
-
   void _restore(Map<String, dynamic> j) {
     onboarded = j['onboarded'] as bool? ?? false;
     final f = j['fieldId'] as String?;
@@ -135,18 +126,10 @@ class AppState extends ChangeNotifier {
         .toList();
     saved = ids('saved');
     compare = ids('compare').take(maxCompare).toList();
-    purchases = (j['purchases'] as List? ?? const [])
-        .map((e) => Purchase.fromJson(e as Map<String, dynamic>))
-        .where((p) => catalog.tool(p.toolId) != null)
-        .toList();
     reviews = (j['reviews'] as List? ?? const [])
         .map((e) => Review.fromJson(e as Map<String, dynamic>))
         .where((r) => catalog.tool(r.toolId) != null)
         .toList();
-    final st = j['student'];
-    student = st == null
-        ? null
-        : StudentStatus.fromJson(st as Map<String, dynamic>);
   }
 
   Map<String, dynamic> toJson() => {
@@ -156,9 +139,7 @@ class AppState extends ChangeNotifier {
     'themeMode': themeMode.name,
     'saved': saved,
     'compare': compare,
-    'purchases': purchases.map((p) => p.toJson()).toList(),
     'reviews': reviews.map((r) => r.toJson()).toList(),
-    'student': student?.toJson(),
   };
 
   Future<void> _pending = Future.value();
@@ -347,49 +328,43 @@ class AppState extends ChangeNotifier {
     _commit();
   }
 
-  // ───────── purchases ─────────
+  // ───────── catalog ─────────
 
-  Purchase? purchaseFor(String toolId) =>
-      purchases.where((p) => p.toolId == toolId).firstOrNull;
-
-  Purchase recordPurchase({
-    required Tool tool,
-    required Plan plan,
-    required Billing billing,
-    required int seats,
-    required String method,
-  }) {
-    final at = now();
-    final p = Purchase(
-      toolId: tool.id,
-      planName: plan.name,
-      billing: billing,
-      seats: plan.perSeat ? seats : 1,
-      amountCents: dueCents(plan, billing, seats) ?? 0,
-      purchasedAt: at,
-      renewsAt: nextRenewal(at, billing),
-      licenceKey: purchaseFor(tool.id)?.licenceKey ?? newLicenceKey(tool),
-      method: method,
-    );
-    purchases = [p, ...purchases.where((x) => x.toolId != tool.id)];
-    _commit();
-    return p;
-  }
-
-  void cancelPurchase(String toolId) {
-    purchases = [
-      for (final p in purchases) p.toolId == toolId ? p.cancelled() : p,
-    ];
-    flash('Cancelled · no further charges');
+  /// Swaps in a newly published catalog, dropping anything that refers to a
+  /// tool or field it no longer contains.
+  void replaceCatalog(Catalog next) {
+    catalog = next;
+    if (next.field(fieldId) == null) {
+      fieldId = next.fields.first.id;
+      sub = null;
+    }
+    if (sub != null && !next.toolsIn(fieldId).any((t) => t.sub == sub)) {
+      sub = null;
+    }
+    saved = saved.where((id) => next.tool(id) != null).toList();
+    compare = compare.where((id) => next.tool(id) != null).toList();
+    reviews = reviews.where((r) => next.tool(r.toolId) != null).toList();
+    stack = stack
+        .where(
+          (p) => switch (p) {
+            DetailPage(:final toolId) => next.tool(toolId) != null,
+            CategoryPage(:final fieldId) => next.field(fieldId) != null,
+            _ => true,
+          },
+        )
+        .toList();
     _commit();
   }
 
-  // ───────── student & reviews ─────────
+  // ───────── vendor hand-off ─────────
 
-  void setStudent(StudentStatus? s) {
-    student = s;
-    _commit();
+  /// Opens the vendor's site through Vertex's partner link.
+  Future<void> visitVendor(Tool tool) async {
+    final ok = await links.open(tool.link);
+    if (!ok) flash('Couldn’t open ${tool.domain}');
   }
+
+  // ───────── reviews ─────────
 
   List<Review> reviewsFor(String toolId) =>
       reviews.where((r) => r.toolId == toolId).toList();
@@ -415,9 +390,7 @@ class AppState extends ChangeNotifier {
     themeMode = ThemeMode.system;
     saved = [];
     compare = [];
-    purchases = [];
     reviews = [];
-    student = null;
     tab = VxTab.home;
     stack = [];
     clearFilters();

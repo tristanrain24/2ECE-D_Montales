@@ -6,6 +6,7 @@ import 'package:vertex/services/services.dart';
 import 'package:vertex/state/app_state.dart';
 
 import 'logic_test.dart' show loadCatalog;
+import 'state_test.dart' show FakeLinks;
 
 const phone = Size(390, 844);
 const smallPhone = Size(320, 568);
@@ -17,6 +18,8 @@ Future<AppState> boot(
   bool onboarded = true,
   Role? role,
   double textScale = 1,
+  Catalog? catalog,
+  LinkOpener? links,
 }) async {
   tester.view.physicalSize = size;
   tester.view.devicePixelRatio = 1;
@@ -24,10 +27,9 @@ Future<AppState> boot(
   addTearDown(tester.view.reset);
   addTearDown(tester.platformDispatcher.clearAllTestValues);
   final state = AppState(
-    catalog: loadCatalog(),
+    catalog: catalog ?? loadCatalog(),
     storage: MemoryStorage(),
-    payments: DemoPaymentGateway(delay: const Duration(milliseconds: 50)),
-    verifier: DemoStudentVerifier(delay: Duration.zero),
+    links: links ?? FakeLinks(),
     clock: () => DateTime(2026, 11, 16),
   );
   if (onboarded) state.finishIntro(role);
@@ -75,7 +77,7 @@ void main() {
     expect(s.inIntro, isFalse);
     expect(find.text('Cortexa MD'), findsOneWidget);
     expect(find.text('MEDICINE · STUDENT'), findsOneWidget);
-    expect(find.text('\$14/mo with student email'), findsOneWidget);
+    expect(find.text('\$14/mo for students'), findsOneWidget);
   });
 
   testWidgets('onboarding can be skipped and stepped back through', (
@@ -91,104 +93,39 @@ void main() {
     expect(find.text('Here’s the call.'), findsOneWidget);
   });
 
-  testWidgets('student buys the top pick end to end', (tester) async {
-    final s = await boot(tester, role: Role.student);
-    await tapText(tester, 'Solidum');
-    expect(find.text('Measured in Engineering'.toUpperCase()), findsOneWidget);
-    await tapText(tester, 'Get Solidum · \$12/mo with student email');
-
-    expect(find.text('Step 1 of 3 · Plan'), findsOneWidget);
-    expect(find.text('\$12.00/mo'), findsOneWidget);
-    await tapText(tester, 'Continue');
-
-    expect(find.text('Step 2 of 3 · Verify'), findsOneWidget);
-    await tester.enterText(find.byType(TextField), 'me@gmail.com');
-    await tapText(tester, 'Send code');
-    expect(find.textContaining('Use a school address'), findsOneWidget);
-    await tester.enterText(find.byType(TextField), 'maya.chen@mit.edu');
-    await tapText(tester, 'Send code');
-    final code = s.verifier.demoCodeFor('maya.chen@mit.edu')!;
-    expect(find.textContaining(code), findsOneWidget);
-    await tester.enterText(find.byType(TextField).last, '000000');
-    await tapText(tester, 'Verify');
-    if (code != '000000') {
-      expect(find.textContaining('doesn’t match'), findsOneWidget);
-    }
-    await tester.enterText(find.byType(TextField).last, code);
-    await tapText(tester, 'Verify');
-    expect(
-      find.text('Verified · Massachusetts Institute of Technology'),
-      findsOneWidget,
-    );
-    await tapText(tester, 'Continue');
-
-    expect(find.text('Step 3 of 3 · Pay'), findsOneWidget);
-    expect(find.textContaining('Demo checkout'), findsOneWidget);
-    expect(find.text('Choose a payment method'), findsOneWidget);
-    await tapText(tester, 'Card');
-    await tester.tap(find.text('Pay \$12.00 with Card'));
-    await tester.pump();
-    await tester.pump(const Duration(milliseconds: 10));
-    expect(find.text('Confirming payment'), findsOneWidget);
-    await tester.pumpAndSettle();
-
-    expect(find.text('You’re in.'), findsOneWidget);
-    final p = s.purchaseFor('solidum')!;
-    expect(p.planName, 'Student');
-    expect(p.amountCents, 1200);
-    expect(find.text(p.licenceKey), findsOneWidget);
-    await tapText(tester, 'Done');
-
-    expect(find.text('Manage plan · Student'), findsOneWidget);
-    s.setTab(VxTab.you);
-    await tester.pumpAndSettle();
-    expect(find.text('Solidum · Student'), findsOneWidget);
-    expect(find.text('\$12.00/mo · renews 16 Dec 2026'), findsOneWidget);
-    expect(find.text('Verified'), findsOneWidget);
-  });
-
-  testWidgets('non-student: two steps, seat pricing, annual billing, cancel', (
+  testWidgets('sample catalog says so and opens no placeholder site', (
     tester,
   ) async {
-    final s = await boot(tester, role: Role.team);
+    final links = FakeLinks();
+    await boot(tester, role: Role.student, links: links);
+    expect(find.textContaining('Sample ratings.'), findsOneWidget);
     await tapText(tester, 'Solidum');
-    await tapText(tester, 'Get Solidum · \$95/seat · team');
-    expect(find.text('Step 1 of 2 · Plan'), findsOneWidget);
-    expect(find.text('\$190.00/mo for 2 seats'), findsOneWidget);
-    await tester.tap(find.byTooltip('More seats'));
-    await tester.pumpAndSettle();
-    await tapText(tester, 'Annual · save 20%');
-    expect(find.text('\$2,736.00/yr for 3 seats'), findsOneWidget);
-    await tapText(tester, 'Continue');
-    await tapText(tester, 'PayPal');
-    await tapText(tester, 'Pay \$2,736.00 with PayPal');
-    expect(find.text('You’re in.'), findsOneWidget);
-    await tapText(tester, 'Done');
-
-    await tapText(tester, 'Manage plan · Team');
-    await tapText(tester, 'Cancel subscription');
-    await tapText(tester, 'Cancel subscription');
-    expect(s.purchaseFor('solidum')!.isActive, isFalse);
-    await drain(tester);
+    await tapText(tester, 'Get Solidum · \$12/mo for students');
+    expect(find.text('Sample listing'), findsOneWidget);
+    expect(links.opened, isEmpty);
+    await tapText(tester, 'OK');
+    expect(find.text('Sample listing'), findsNothing);
   });
 
-  testWidgets('free plan activates without a payment step', (tester) async {
-    final s = await boot(tester);
-    s.setStudent(
-      StudentStatus(
-        email: 'a@mit.edu',
-        institution: 'MIT',
-        verifiedAt: DateTime(2026, 11, 1),
-      ),
+  testWidgets('real catalog hands off to the vendor through its partner link', (
+    tester,
+  ) async {
+    final links = FakeLinks();
+    final sample = loadCatalog();
+    final real = Catalog(
+      fields: sample.fields,
+      tools: sample.tools,
+      lastFullPass: 'Aug 2026',
     );
-    s.openTool('circuitry');
-    await tester.pumpAndSettle();
-    await tapText(tester, 'Get Circuitry · from Free');
-    await tapText(tester, 'Student');
-    expect(find.text('Step 1 of 1 · Plan'), findsOneWidget);
-    await tapText(tester, 'Start Student plan');
-    expect(find.text('You’re in.'), findsOneWidget);
-    expect(s.purchaseFor('circuitry')!.amountCents, 0);
+    await boot(tester, role: Role.team, catalog: real, links: links);
+    expect(find.textContaining('Sample ratings.'), findsNothing);
+    await tapText(tester, 'Solidum');
+    expect(
+      find.text('Opens solidum.ai · partner link, tier unaffected'),
+      findsOneWidget,
+    );
+    await tapText(tester, 'Get Solidum · \$95/seat · team');
+    expect(links.opened.single, Uri.parse('https://solidum.ai'));
   });
 
   testWidgets('review goes to the desk and shows as in review', (tester) async {
@@ -285,18 +222,10 @@ void main() {
         textScale: scale,
         role: Role.student,
       );
-      final tool = s.catalog.tool('solidum')!;
       s.toggleSaved('solidum');
       for (final id in ['solidum', 'circuitry', 'femwise']) {
         s.toggleCompare(id);
       }
-      s.recordPurchase(
-        tool: tool,
-        plan: tool.plans[2],
-        billing: Billing.annual,
-        seats: 12,
-        method: 'Card',
-      );
       s.addReview(
         Review(
           toolId: 'solidum',

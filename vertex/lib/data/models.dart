@@ -66,24 +66,14 @@ class Plan {
   final String note;
 
   bool get isFree => price.toLowerCase() == 'free';
-  bool get isCustom => price.toLowerCase() == 'custom';
-  bool get perSeat => price.contains('/seat');
 
-  /// Student plans are gated behind a verified academic email.
+  /// Student plans; the vendor checks student status at sign-up.
   bool get requiresStudent => name.toLowerCase() == 'student';
 
   bool get isTeamPlan => RegExp(
     r'team|lab|firm|department|company|practice|cohort',
     caseSensitive: false,
   ).hasMatch(name);
-
-  /// Monthly price per unit in cents. Null when the plan is priced on request.
-  int? get monthlyCents {
-    if (isFree) return 0;
-    final m = RegExp(r'\$(\d+(?:\.\d{1,2})?)').firstMatch(price);
-    if (m == null) return null;
-    return (double.parse(m.group(1)!) * 100).round();
-  }
 
   factory Plan.fromJson(Map<String, dynamic> j) => Plan(
     name: j['name'] as String,
@@ -140,6 +130,7 @@ class Tool {
     required this.tagline,
     required this.pitch,
     required this.keywords,
+    this.url,
   });
 
   final String id;
@@ -166,6 +157,12 @@ class Tool {
   final String tagline;
   final String pitch;
   final String keywords;
+
+  /// Partner link to the vendor's site. Falls back to the vendor's domain.
+  final String? url;
+
+  Uri get link =>
+      Uri.parse(url != null && url!.isNotEmpty ? url! : 'https://$domain');
 
   int get accuracy => metrics[Metric.accuracy]!.score;
 
@@ -205,6 +202,7 @@ class Tool {
       tagline: j['tagline'] as String? ?? '',
       pitch: j['pitch'] as String? ?? '',
       keywords: j['keywords'] as String? ?? '',
+      url: j['url'] as String?,
     );
   }
 }
@@ -214,12 +212,16 @@ class Catalog {
     required this.fields,
     required this.tools,
     required this.lastFullPass,
+    this.sample = false,
   }) : _toolsById = {for (final t in tools) t.id: t},
        _fieldsById = {for (final f in fields) f.id: f};
 
   final List<Field> fields;
   final List<Tool> tools;
   final String lastFullPass;
+
+  /// True while the catalog holds placeholder ratings, not real ones.
+  final bool sample;
   final Map<String, Tool> _toolsById;
   final Map<String, Field> _fieldsById;
 
@@ -229,96 +231,35 @@ class Catalog {
   List<Tool> toolsIn(String fieldId) =>
       tools.where((t) => t.fieldId == fieldId).toList();
 
+  /// Throws [FormatException] when the catalog is unusable.
   factory Catalog.fromJson(String source) {
-    final j = jsonDecode(source) as Map<String, dynamic>;
-    final fields = (j['fields'] as List)
+    final j = jsonDecode(source);
+    if (j is! Map<String, dynamic>) {
+      throw const FormatException('Catalog must be a JSON object');
+    }
+    final allFields = (j['fields'] as List)
         .map((e) => Field.fromJson(e as Map<String, dynamic>))
         .toList();
-    final ids = fields.map((f) => f.id).toSet();
+    final ids = allFields.map((f) => f.id).toSet();
     final tools = (j['tools'] as List)
         .map((e) => Tool.fromJson(e as Map<String, dynamic>))
         // A tool without a known field cannot be ranked, so it is dropped.
         .where((t) => ids.contains(t.fieldId) && t.plans.isNotEmpty)
         .toList();
+    // A field with nothing rated in it has no pick to show.
+    final fields = allFields
+        .where((f) => tools.any((t) => t.fieldId == f.id))
+        .toList();
+    if (fields.isEmpty) {
+      throw const FormatException('Catalog has no rated tools');
+    }
     return Catalog(
       fields: fields,
       tools: tools,
       lastFullPass: j['lastFullPass'] as String? ?? '',
+      sample: j['sample'] as bool? ?? false,
     );
   }
-}
-
-enum Billing { monthly, annual }
-
-enum PurchaseStatus { active, cancelled }
-
-class Purchase {
-  const Purchase({
-    required this.toolId,
-    required this.planName,
-    required this.billing,
-    required this.seats,
-    required this.amountCents,
-    required this.purchasedAt,
-    required this.renewsAt,
-    required this.licenceKey,
-    required this.method,
-    this.status = PurchaseStatus.active,
-  });
-
-  final String toolId;
-  final String planName;
-  final Billing billing;
-  final int seats;
-
-  /// Amount charged per billing period, in cents.
-  final int amountCents;
-  final DateTime purchasedAt;
-  final DateTime renewsAt;
-  final String licenceKey;
-  final String method;
-  final PurchaseStatus status;
-
-  bool get isActive => status == PurchaseStatus.active;
-
-  Purchase cancelled() => Purchase(
-    toolId: toolId,
-    planName: planName,
-    billing: billing,
-    seats: seats,
-    amountCents: amountCents,
-    purchasedAt: purchasedAt,
-    renewsAt: renewsAt,
-    licenceKey: licenceKey,
-    method: method,
-    status: PurchaseStatus.cancelled,
-  );
-
-  Map<String, dynamic> toJson() => {
-    'toolId': toolId,
-    'planName': planName,
-    'billing': billing.name,
-    'seats': seats,
-    'amountCents': amountCents,
-    'purchasedAt': purchasedAt.toIso8601String(),
-    'renewsAt': renewsAt.toIso8601String(),
-    'licenceKey': licenceKey,
-    'method': method,
-    'status': status.name,
-  };
-
-  factory Purchase.fromJson(Map<String, dynamic> j) => Purchase(
-    toolId: j['toolId'] as String,
-    planName: j['planName'] as String,
-    billing: Billing.values.byName(j['billing'] as String),
-    seats: (j['seats'] as num).toInt(),
-    amountCents: (j['amountCents'] as num).toInt(),
-    purchasedAt: DateTime.parse(j['purchasedAt'] as String),
-    renewsAt: DateTime.parse(j['renewsAt'] as String),
-    licenceKey: j['licenceKey'] as String,
-    method: j['method'] as String? ?? '',
-    status: PurchaseStatus.values.byName(j['status'] as String),
-  );
 }
 
 enum ReviewVerdict {
@@ -358,35 +299,5 @@ class Review {
     useCase: j['useCase'] as String? ?? '',
     body: j['body'] as String,
     createdAt: DateTime.parse(j['createdAt'] as String),
-  );
-}
-
-class StudentStatus {
-  const StudentStatus({
-    required this.email,
-    required this.institution,
-    required this.verifiedAt,
-  });
-  final String email;
-  final String institution;
-  final DateTime verifiedAt;
-
-  String get domain => email.split('@').last;
-
-  /// Student status is re-confirmed once a year.
-  DateTime get expiresAt =>
-      DateTime(verifiedAt.year + 1, verifiedAt.month, verifiedAt.day);
-  bool isValidAt(DateTime now) => now.isBefore(expiresAt);
-
-  Map<String, dynamic> toJson() => {
-    'email': email,
-    'institution': institution,
-    'verifiedAt': verifiedAt.toIso8601String(),
-  };
-
-  factory StudentStatus.fromJson(Map<String, dynamic> j) => StudentStatus(
-    email: j['email'] as String,
-    institution: j['institution'] as String,
-    verifiedAt: DateTime.parse(j['verifiedAt'] as String),
   );
 }

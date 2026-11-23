@@ -1,15 +1,13 @@
 import 'package:material_ui/material_ui.dart';
 
 import '../../data/models.dart';
-import '../../logic/format.dart';
 import '../../logic/ranking.dart';
 import '../../state/app_state.dart';
 import '../../theme/tokens.dart';
 import '../widgets/widgets.dart';
 import 'browse.dart';
-import 'checkout.dart';
+import '../sheets.dart';
 import 'review.dart';
-import 'you.dart';
 
 class DetailScreen extends StatelessWidget {
   const DetailScreen({super.key, required this.tool});
@@ -159,9 +157,7 @@ class DetailScreen extends StatelessWidget {
             for (final p in t.plans)
               VxRow(
                 title: p.name,
-                subtitle: p.requiresStudent && !p.note.contains('verification')
-                    ? '${p.note.isEmpty ? '' : '${p.note} · '}student email required'
-                    : p.note,
+                subtitle: p.note,
                 trailing: Text(p.price, style: VxText.title(context)),
               ),
           ],
@@ -261,7 +257,7 @@ class _MetricBlock extends StatelessWidget {
   }
 }
 
-/// Pinned call to action under the detail page.
+/// Pinned call to action under the detail page: hands off to the vendor.
 class DetailFooter extends StatelessWidget {
   const DetailFooter({super.key, required this.tool});
   final Tool tool;
@@ -269,29 +265,20 @@ class DetailFooter extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final s = AppScope.of(context);
-    final owned = s.purchaseFor(tool.id);
-    final active = owned != null && owned.isActive;
     return Padding(
       padding: const EdgeInsets.fromLTRB(18, 12, 18, 10),
       child: Column(
         mainAxisSize: MainAxisSize.min,
         children: [
-          if (active)
-            VxButton(
-              'Manage plan · ${owned.planName}',
-              icon: Ph.checkCircle,
-              kind: VxButtonKind.primary,
-              block: true,
-              onTap: () => showPurchaseSheet(context, owned),
-            )
-          else
-            VxButton(
-              'Get ${tool.name} · ${leadPrice(tool, s.role).replaceFirst('From', 'from')}',
-              icon: Ph.shoppingBagOpen,
-              kind: VxButtonKind.primary,
-              block: true,
-              onTap: () => showCheckout(context, tool),
-            ),
+          VxButton(
+            'Get ${tool.name} · ${leadPrice(tool, s.role).replaceFirst('From', 'from')}',
+            trailing: Ph.arrowUpRight,
+            kind: VxButtonKind.primary,
+            block: true,
+            onTap: () => s.catalog.sample
+                ? showSampleLinkNotice(context, tool)
+                : s.visitVendor(tool),
+          ),
           const SizedBox(height: 6),
           Semantics(
             button: true,
@@ -300,9 +287,7 @@ class DetailFooter extends StatelessWidget {
               child: Padding(
                 padding: const EdgeInsets.symmetric(vertical: 4, horizontal: 6),
                 child: Text(
-                  active
-                      ? 'Renews ${fmtDate(owned.renewsAt)} · cancel any time'
-                      : 'We earn a commission on plans bought here · tier unaffected',
+                  'Opens ${tool.domain} · partner link, tier unaffected',
                   textAlign: TextAlign.center,
                   style: VxText.muted(context, size: 11.5),
                 ),
@@ -314,3 +299,31 @@ class DetailFooter extends StatelessWidget {
     );
   }
 }
+
+/// While the catalog is sample data, its vendor domains are placeholders
+/// that may belong to unrelated real sites, so nothing is opened.
+Future<void> showSampleLinkNotice(BuildContext context, Tool tool) =>
+    showVxBottomSheet<void>(
+      context,
+      (ctx) => Column(
+        crossAxisAlignment: CrossAxisAlignment.stretch,
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          Text('Sample listing', style: VxText.display(ctx, size: 21)),
+          const SizedBox(height: 8),
+          Text(
+            '${tool.name} is placeholder data, so there is no real site to '
+            'open. Once real ratings are published, this button takes you to '
+            'the vendor’s own sign-up page through a Vertex partner link.',
+            style: VxText.secondary(ctx, size: 14),
+          ),
+          const SizedBox(height: 20),
+          VxButton(
+            'OK',
+            kind: VxButtonKind.primary,
+            block: true,
+            onTap: () => Navigator.pop(ctx),
+          ),
+        ],
+      ),
+    );

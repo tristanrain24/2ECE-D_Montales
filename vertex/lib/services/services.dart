@@ -1,23 +1,74 @@
-import 'dart:math';
+import 'dart:async';
 
 import 'package:flutter/services.dart' show rootBundle;
+import 'package:http/http.dart' as http;
 import 'package:shared_preferences/shared_preferences.dart';
+import 'package:url_launcher/url_launcher.dart';
 
 import '../data/models.dart';
 
 // ───────── catalog ─────────
 
-abstract class CatalogSource {
-  Future<Catalog> load();
-}
+/// Where the app downloads ratings from on launch. Editing this file on the
+/// repository's main branch updates every installed copy of the app.
+/// Override at build time with `--dart-define=CATALOG_URL=https://…`.
+const catalogUrl = String.fromEnvironment(
+  'CATALOG_URL',
+  defaultValue: 'https://raw.githubusercontent.com/tristanrain24/2ECE-D_Montales/main/vertex/assets/data/catalog.json',
+);
 
-/// The catalog that ships inside the app. Swap for a remote source to
-/// publish monthly re-scores without an app update.
-class BundledCatalogSource implements CatalogSource {
-  const BundledCatalogSource();
-  @override
-  Future<Catalog> load() async =>
-      Catalog.fromJson(await rootBundle.loadString('assets/data/catalog.json'));
+/// Loads the catalog the app starts with, then looks for a newer one.
+///
+/// Start-up never waits on the network: the app opens with the last catalog
+/// it downloaded (or the copy bundled in the app), and [refresh] fetches the
+/// published file afterwards. A download that is missing, malformed or empty
+/// is ignored, so a bad edit to the published file cannot break the app.
+class CatalogSource {
+  CatalogSource({
+    this.url = catalogUrl,
+    http.Client? client,
+    Future<String> Function()? bundled,
+    this.cache,
+    this.timeout = const Duration(seconds: 8),
+  }) : _client = client ?? http.Client(),
+       _bundled =
+           bundled ?? (() => rootBundle.loadString('assets/data/catalog.json'));
+
+  final String url;
+  final http.Client _client;
+  final Future<String> Function() _bundled;
+  final Storage? cache;
+  final Duration timeout;
+
+  /// The cached download if it is still valid, otherwise the bundled copy.
+  Future<Catalog> initial() async {
+    final cached = await cache?.read();
+    if (cached != null) {
+      try {
+        return Catalog.fromJson(cached);
+      } on Object {
+        await cache?.clear();
+      }
+    }
+    return Catalog.fromJson(await _bundled());
+  }
+
+  /// Downloads the published catalog. Null when it is unreachable or unusable.
+  Future<Catalog?> refresh() async {
+    if (url.isEmpty) return null;
+    try {
+      final res = await _client
+          .get(Uri.parse(url), headers: const {'Cache-Control': 'no-cache'})
+          .timeout(timeout);
+      if (res.statusCode != 200) return null;
+      final body = res.body;
+      final catalog = Catalog.fromJson(body);
+      await cache?.write(body);
+      return catalog;
+    } on Object {
+      return null;
+    }
+  }
 }
 
 // ───────── storage ─────────
@@ -29,16 +80,17 @@ abstract class Storage {
 }
 
 class PrefsStorage implements Storage {
-  static const _key = 'vertex.state.v1';
+  const PrefsStorage([this.key = 'vertex.state.v1']);
+  final String key;
   @override
   Future<String?> read() async =>
-      (await SharedPreferences.getInstance()).getString(_key);
+      (await SharedPreferences.getInstance()).getString(key);
   @override
   Future<void> write(String value) async =>
-      (await SharedPreferences.getInstance()).setString(_key, value);
+      (await SharedPreferences.getInstance()).setString(key, value);
   @override
   Future<void> clear() async =>
-      (await SharedPreferences.getInstance()).remove(_key);
+      (await SharedPreferences.getInstance()).remove(key);
 }
 
 class MemoryStorage implements Storage {
@@ -52,178 +104,22 @@ class MemoryStorage implements Storage {
   Future<void> clear() async => value = null;
 }
 
-// ───────── payments ─────────
+// ───────── vendor links ─────────
 
-enum PayMethod {
-  applePay('Apple Pay'),
-  googlePay('Google Pay'),
-  card('Card'),
-  payPal('PayPal');
-
-  const PayMethod(this.label);
-  final String label;
+/// Opens a vendor's site. On phones this is an in-app browser sheet;
+/// on desktop, the default browser.
+abstract class LinkOpener {
+  Future<bool> open(Uri uri);
 }
 
-class PaymentResult {
-  const PaymentResult.ok(this.reference) : error = null;
-  const PaymentResult.failed(this.error) : reference = null;
-  final String? reference;
-  final String? error;
-  bool get ok => error == null;
-}
-
-abstract class PaymentGateway {
-  /// True when no money moves. The UI says so wherever a charge is shown.
-  bool get isDemo;
-  Future<PaymentResult> charge({
-    required int amountCents,
-    required PayMethod method,
-    required String description,
-  });
-}
-
-/// Stands in for a real processor. It never takes payment details and
-/// never charges anyone; it only lets the purchase flow complete.
-class DemoPaymentGateway implements PaymentGateway {
-  DemoPaymentGateway({this.delay = const Duration(milliseconds: 1400)});
-  final Duration delay;
-  final _rng = Random();
-
+class SystemLinkOpener implements LinkOpener {
+  const SystemLinkOpener();
   @override
-  bool get isDemo => true;
-
-  @override
-  Future<PaymentResult> charge({
-    required int amountCents,
-    required PayMethod method,
-    required String description,
-  }) async {
-    await Future<void>.delayed(delay);
-    // 0x7fffffff keeps the bound valid on the web, where ints are doubles.
-    return PaymentResult.ok(
-      'demo_${_rng.nextInt(0x7fffffff).toRadixString(16)}',
-    );
-  }
-}
-
-// ───────── student verification ─────────
-
-class VerificationException implements Exception {
-  const VerificationException(this.message);
-  final String message;
-  @override
-  String toString() => message;
-}
-
-abstract class StudentVerifier {
-  bool get isDemo;
-
-  /// Sends a one-time code to [email]. Throws [VerificationException] if the
-  /// address is not an academic one.
-  Future<void> sendCode(String email);
-
-  /// Confirms the code and returns the verified status.
-  Future<StudentStatus> confirm(String email, String code);
-
-  /// In demo mode there is no mail server, so the code is shown in the app.
-  String? demoCodeFor(String email);
-}
-
-final _emailRe = RegExp(r'^[^\s@]+@([a-z0-9-]+\.)+[a-z]{2,}$');
-
-/// Accepts `.edu`, `.edu.xx` and `.ac.xx` hosts (and their subdomains).
-bool isAcademicEmail(String email) {
-  final e = email.trim().toLowerCase();
-  if (!_emailRe.hasMatch(e)) return false;
-  final labels = e.split('@').last.split('.');
-  final n = labels.length;
-  if (labels.last == 'edu') return true;
-  return n >= 3 && (labels[n - 2] == 'edu' || labels[n - 2] == 'ac');
-}
-
-const _institutions = {
-  'mit.edu': 'Massachusetts Institute of Technology',
-  'stanford.edu': 'Stanford University',
-  'harvard.edu': 'Harvard University',
-  'berkeley.edu': 'University of California, Berkeley',
-  'ox.ac.uk': 'University of Oxford',
-  'cam.ac.uk': 'University of Cambridge',
-  'up.edu.ph': 'University of the Philippines',
-  'ust.edu.ph': 'University of Santo Tomas',
-  'dlsu.edu.ph': 'De La Salle University',
-  'ateneo.edu': 'Ateneo de Manila University',
-  'nus.edu.sg': 'National University of Singapore',
-};
-
-String institutionFor(String email) {
-  final host = email.trim().toLowerCase().split('@').last;
-  for (final e in _institutions.entries) {
-    if (host == e.key || host.endsWith('.${e.key}')) return e.value;
-  }
-  return host;
-}
-
-class DemoStudentVerifier implements StudentVerifier {
-  DemoStudentVerifier({
-    this.delay = const Duration(milliseconds: 700),
-    Random? random,
-    DateTime Function()? clock,
-  }) : _rng = random ?? Random(),
-       _now = clock ?? DateTime.now;
-  final Duration delay;
-  final Random _rng;
-  final DateTime Function() _now;
-  final _codes = <String, String>{};
-
-  @override
-  bool get isDemo => true;
-
-  @override
-  Future<void> sendCode(String email) async {
-    final e = email.trim().toLowerCase();
-    if (!isAcademicEmail(e)) {
-      throw const VerificationException(
-        'Use a school address — one ending in .edu, .edu.xx or .ac.xx.',
-      );
+  Future<bool> open(Uri uri) async {
+    try {
+      return await launchUrl(uri);
+    } on Object {
+      return false;
     }
-    await Future<void>.delayed(delay);
-    _codes[e] = (_rng.nextInt(900000) + 100000).toString();
   }
-
-  @override
-  String? demoCodeFor(String email) => _codes[email.trim().toLowerCase()];
-
-  @override
-  Future<StudentStatus> confirm(String email, String code) async {
-    final e = email.trim().toLowerCase();
-    await Future<void>.delayed(delay);
-    final want = _codes[e];
-    if (want == null) {
-      throw const VerificationException('Send a code first.');
-    }
-    if (code.trim() != want) {
-      throw const VerificationException(
-        'That code doesn’t match. Check it and try again.',
-      );
-    }
-    _codes.remove(e);
-    return StudentStatus(
-      email: e,
-      institution: institutionFor(e),
-      verifiedAt: _now(),
-    );
-  }
-}
-
-String newLicenceKey(Tool tool, [Random? random]) {
-  const alphabet = 'ABCDEFGHJKLMNPQRSTUVWXYZ23456789';
-  final rng = random ?? Random.secure();
-  String block() =>
-      List.generate(4, (_) => alphabet[rng.nextInt(alphabet.length)]).join();
-  final tag = tool.name
-      .toUpperCase()
-      .replaceAll(RegExp('[^A-Z]'), '')
-      .padRight(4, 'X')
-      .substring(0, 4);
-  return 'VX-$tag-${block()}-${block()}';
 }

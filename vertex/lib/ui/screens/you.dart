@@ -1,14 +1,11 @@
-import 'package:flutter/services.dart';
 import 'package:material_ui/material_ui.dart';
 
 import '../../data/models.dart';
-import '../../logic/format.dart';
 import '../../state/app_state.dart';
 import '../../theme/tokens.dart';
 import '../sheets.dart';
 import '../widgets/widgets.dart';
 import 'browse.dart';
-import 'checkout.dart';
 import 'review.dart';
 
 const appVersion = '1.0.0';
@@ -20,68 +17,15 @@ class YouScreen extends StatelessWidget {
   Widget build(BuildContext context) {
     final s = AppScope.of(context);
     final c = context.vx;
-    final st = s.student;
 
     Widget label(String text) => Padding(
       padding: const EdgeInsets.only(top: 24, bottom: 10),
       child: Kicker(text),
     );
 
-    Widget statusTag(Purchase p) => p.isActive
-        ? const VxTag('Active', kind: VxTagKind.accent)
-        : const VxTag('Cancelled');
-
     return ListView(
       padding: pagePadding,
       children: [
-        label('Purchases'),
-        if (s.purchases.isEmpty)
-          VxCard(
-            child: Text(
-              'No plans yet. When you get a tool through Vertex, its plan and '
-              'licence key live here.',
-              style: VxText.secondary(context),
-            ),
-          )
-        else
-          VxGroup(
-            children: [
-              for (final p in s.purchases)
-                VxRow(
-                  title:
-                      '${s.catalog.tool(p.toolId)?.name ?? p.toolId} · ${p.planName}',
-                  subtitle: p.isActive
-                      ? '${p.amountCents == 0 ? 'Free' : '${fmtCents(p.amountCents)}/${periodLabel(p.billing)}'} · renews ${fmtDate(p.renewsAt)}'
-                      : 'Access until ${fmtDate(p.renewsAt)}',
-                  trailing: statusTag(p),
-                  chevron: true,
-                  onTap: () => showPurchaseSheet(context, p),
-                ),
-            ],
-          ),
-
-        label('Student status'),
-        VxGroup(
-          children: [
-            if (s.studentVerified && st != null)
-              VxRow(
-                leading: Icon(PhFill.sealCheck, size: 22, color: c.accentFg),
-                title: 'Verified',
-                subtitle: '${st.domain} · renews ${fmtDate(st.expiresAt)}',
-                chevron: true,
-                onTap: () => showStudentVerifySheet(context),
-              )
-            else
-              VxRow(
-                leading: Icon(Ph.student, size: 22, color: c.textSecondary),
-                title: st == null ? 'Not verified' : 'Verification expired',
-                subtitle: 'Verify a school email to unlock student pricing',
-                chevron: true,
-                onTap: () => showStudentVerifySheet(context),
-              ),
-          ],
-        ),
-
         label('Your reviews'),
         if (s.reviews.isEmpty)
           VxCard(
@@ -170,15 +114,15 @@ class YouScreen extends StatelessWidget {
             ),
             VxRow(
               title: 'Reset app data',
-              subtitle: 'Clears plans, reviews, saved tools and settings',
+              subtitle: 'Clears reviews, saved tools and settings',
               chevron: true,
               onTap: () async {
                 final ok = await confirmVx(
                   context,
                   title: 'Reset Vertex?',
                   message:
-                      'This removes your plans, licence keys, reviews, saved '
-                      'tools, student status and settings from this device. '
+                      'This removes your reviews, saved tools, compare list '
+                      'and settings from this device. '
                       'It can’t be undone.',
                   confirmLabel: 'Reset everything',
                   destructive: true,
@@ -275,92 +219,3 @@ class YouScreen extends StatelessWidget {
         );
       });
 }
-
-Future<void> showPurchaseSheet(
-  BuildContext context,
-  Purchase purchase,
-) => showVxBottomSheet<void>(context, (ctx) {
-  final s = AppScope.of(ctx);
-  // Re-read so the sheet reflects a cancellation made while it is open.
-  final p = s.purchaseFor(purchase.toolId) ?? purchase;
-  final tool = s.catalog.tool(p.toolId);
-  return Column(
-    crossAxisAlignment: CrossAxisAlignment.stretch,
-    mainAxisSize: MainAxisSize.min,
-    children: [
-      Row(
-        children: [
-          Expanded(
-            child: Text(
-              '${tool?.name ?? p.toolId} · ${p.planName}',
-              style: VxText.display(ctx, size: 21),
-            ),
-          ),
-          p.isActive
-              ? const VxTag('Active', kind: VxTagKind.accent)
-              : const VxTag('Cancelled'),
-        ],
-      ),
-      const SizedBox(height: 6),
-      Text(
-        [
-          if (p.amountCents == 0)
-            'Free plan'
-          else
-            '${fmtCents(p.amountCents)} per ${p.billing == Billing.monthly ? 'month' : 'year'}',
-          if (p.seats > 1) '${p.seats} seats',
-          if (p.amountCents > 0) p.method,
-          p.isActive
-              ? 'renews ${fmtDate(p.renewsAt)}'
-              : 'access until ${fmtDate(p.renewsAt)}',
-        ].join(' · '),
-        style: VxText.secondary(ctx),
-      ),
-      const SizedBox(height: 16),
-      LicenceKeyCard(licenceKey: p.licenceKey),
-      const SizedBox(height: 12),
-      VxButton(
-        'Copy licence key',
-        icon: Ph.copy,
-        block: true,
-        onTap: () async {
-          await Clipboard.setData(ClipboardData(text: p.licenceKey));
-          s.flash('Licence key copied');
-        },
-      ),
-      if (tool != null) ...[
-        const SizedBox(height: 8),
-        VxButton(
-          p.isActive ? 'Change plan' : 'Resubscribe',
-          block: true,
-          kind: p.isActive ? VxButtonKind.secondary : VxButtonKind.primary,
-          onTap: () {
-            final nav = Navigator.of(ctx, rootNavigator: true);
-            nav.pop();
-            showCheckout(nav.context, tool);
-          },
-        ),
-      ],
-      if (p.isActive) ...[
-        const SizedBox(height: 8),
-        VxButton(
-          'Cancel subscription',
-          kind: VxButtonKind.danger,
-          block: true,
-          onTap: () async {
-            final ok = await confirmVx(
-              ctx,
-              title: 'Cancel ${tool?.name ?? 'this plan'}?',
-              message:
-                  'You keep access until ${fmtDate(p.renewsAt)} and '
-                  'won’t be charged again.',
-              confirmLabel: 'Cancel subscription',
-              destructive: true,
-            );
-            if (ok) s.cancelPurchase(p.toolId);
-          },
-        ),
-      ],
-    ],
-  );
-});

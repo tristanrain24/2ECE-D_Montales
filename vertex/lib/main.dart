@@ -16,13 +16,17 @@ Future<void> main() async {
       'Phosphor Icons',
     ], await rootBundle.loadString('assets/fonts/Phosphor-LICENSE.txt'));
   });
+
+  final catalogs = CatalogSource(
+    cache: const PrefsStorage('vertex.catalog.v1'),
+  );
   final state = await AppState.load(
-    catalog: await const BundledCatalogSource().load(),
-    storage: PrefsStorage(),
-    // Replace these two with production services before taking real payments
-    // or sending real verification email. See README → "Going live".
-    payments: DemoPaymentGateway(),
-    verifier: DemoStudentVerifier(),
+    catalog: await catalogs.initial(),
+    storage: const PrefsStorage(),
   );
   runApp(VertexApp(state: state));
+
+  // Pick up re-scored ratings without delaying start-up.
+  final latest = await catalogs.refresh();
+  if (latest != null) state.replaceCatalog(latest);
 }

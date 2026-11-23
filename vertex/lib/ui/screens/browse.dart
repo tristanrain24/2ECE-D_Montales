@@ -60,6 +60,13 @@ class HomeScreen extends StatelessWidget {
       padding: pagePadding,
       children: [
         const SizedBox(height: 8),
+        if (s.catalog.sample) ...[
+          const Notice(
+            'Sample ratings. These tools are placeholders while the real '
+            'ratings are prepared.',
+          ),
+          const SizedBox(height: 16),
+        ],
         Kicker(
           s.role == null ? s.field.name : '${s.field.name} · ${s.role!.label}',
         ),
@@ -880,8 +887,8 @@ class MethodScreen extends StatelessWidget {
               ),
               const SizedBox(height: 8),
               Text(
-                'We earn a commission when you subscribe to a tool through '
-                'Vertex. Vendors see sales figures; they never see a draft '
+                'When you sign up through a Vertex link, the vendor may pay us '
+                'a commission. Vendors see sales figures; they never see a draft '
                 'tier, and they cannot buy one. Tools that pay us nothing are '
                 'rated exactly the same way — several A-tiers do.',
                 style: VxText.secondary(context),
