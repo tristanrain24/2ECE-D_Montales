@@ -48,9 +48,8 @@ class DetailScreen extends StatelessWidget {
       ),
     );
 
-    return ListView(
-      padding: pagePadding,
-      children: [
+    return SplitLayout(
+      main: [
         const SizedBox(height: 4),
         Wrap(
           spacing: 8,
@@ -101,9 +100,11 @@ class DetailScreen extends StatelessWidget {
           ),
         ),
         const SizedBox(height: 18),
-        Text(
-          t.verdict,
-          style: TextStyle(fontSize: 16, height: 1.5, color: c.text),
+        Prose(
+          Text(
+            t.verdict,
+            style: TextStyle(fontSize: 16, height: 1.5, color: c.text),
+          ),
         ),
         const SizedBox(height: 8),
         Text(
@@ -134,7 +135,8 @@ class DetailScreen extends StatelessWidget {
               Metric.integrations => 'Tools it plugs into natively',
             },
           ),
-
+      ],
+      side: [
         section('Where it wins'),
         for (final w in t.wins) bullet(Ph.check, w, c.accentFg),
         section('Where it doesn’t'),

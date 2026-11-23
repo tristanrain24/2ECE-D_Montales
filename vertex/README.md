@@ -52,29 +52,37 @@ flutter test           # 33 tests: logic, state and end-to-end widget flows
 Apple and Microsoft toolchains only run on their own operating systems, so
 `.github/workflows/vertex.yml` builds all four on GitHub's runners:
 
-- every push that touches `vertex/` runs the tests, then builds each platform
-  and attaches the results to the workflow run as artifacts;
-- pushing a tag such as `v1.0.0` also publishes them as a GitHub Release.
+- every push runs the analyzer and the tests;
+- the Android, iOS, macOS and Windows builds run when you start them from
+  **Actions → Vertex → Run workflow**, or when you push a tag such as
+  `v1.0.0`, which also attaches them to a GitHub Release. They don't run on
+  every push because private repositories get limited free Actions time, and
+  macOS jobs use it ten times as fast.
+
+**Web version.** `flutter build web` produces a site in `build/web/` that you
+can open locally (`flutter run -d chrome`). There's no published site while
+the project is private.
 
 Bump `version:` in `pubspec.yaml` (`1.0.0+1` → name+build number) before each
 release; stores reject a repeated build number.
 
 ## Updating the ratings
 
-The app reads its ratings from [`assets/data/catalog.json`](assets/data/catalog.json).
-On every launch it downloads the copy of that file on the repository's
-**`main`** branch, so editing it there updates every installed app within
-a few minutes (GitHub caches the file for up to 5) with no app release.
+The app's ratings live in [`assets/data/catalog.json`](assets/data/catalog.json)
+and ship inside the app, so it works fully offline. Edit the file and rebuild
+to change them.
+
+The app can also download updated ratings on launch, so a re-score reaches
+installed copies without a new release. This is **off by default**, because
+the project is private and the file has nowhere public to live. To turn it on
+later, publish `catalog.json` at a URL the app can read (for example a public
+gist or a static host) and build with
+`--dart-define=CATALOG_URL=https://…/catalog.json`. With it on:
 
 - Start-up never waits for the download; the app opens with the last
   catalog it downloaded, or the copy bundled in the app.
-- A download that is missing or invalid is ignored, so a bad edit can't break
-  the app. CI runs the tests on every edit; a red ❌ on the commit means the
-  file has a problem.
-- Until this branch is merged into `main`, the download finds nothing and the
-  app uses its bundled copy.
-- To read from somewhere else, build with
-  `--dart-define=CATALOG_URL=https://…/catalog.json`.
+- A download that is missing or invalid is ignored, so a bad edit can't
+  break the app.
 
 **Replacing the sample data.** The 22 tools in the file now are the sample
 data from the Vertex design. Their domains are placeholders, and some may
@@ -107,7 +115,7 @@ These need accounts and keys that only you can create.
 **App ID.** It is `com.vertexapp.vertex` for now. Stores tie your listing to
 this ID and it can never change after the first upload, so set it once you
 have a domain (reversed, e.g. `example.com` → `com.example.vertex`). If you
-have no domain, `io.github.tristanrain24.vertex` is a safe ID you already own.
+have no domain, an ID based on your GitHub username is a safe choice.
 
 ```bash
 dart run tool/set_app_id.dart com.example.vertex

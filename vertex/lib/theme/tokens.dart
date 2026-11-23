@@ -49,8 +49,8 @@ class VxColors extends ThemeExtension<VxColors> {
     bg: Color(0xFFE4E7F5),
     surface: Color(0xFFF3F5FE),
     text: Color(0xFF292B31),
-    textSecondary: Color(0xFF595D6C),
-    textMuted: Color(0xFF666A7B),
+    textSecondary: Color(0xFF4E5262),
+    textMuted: Color(0xFF5C6071),
     divider: Color(0xFFCFD3E5),
     border: Color(0xFFCFD3E5),
     borderStrong: Color(0xFFB2B6CA),
@@ -140,6 +140,9 @@ ThemeData buildVxTheme(Brightness brightness) {
       brightness: brightness,
     ).copyWith(primary: c.accentFg, surface: c.bg, onSurface: c.text),
     splashFactory: InkSparkle.splashFactory,
+    // Visible keyboard focus and hover on every control.
+    focusColor: c.accent.withValues(alpha: 0.28),
+    hoverColor: c.accent.withValues(alpha: 0.08),
     extensions: [c],
   );
   return base.copyWith(
@@ -187,3 +190,31 @@ class VxText {
     color: c.vx.text,
   );
 }
+
+/// Base text is set about 7% above the design's sizes (15px body becomes
+/// 16px), on top of whatever text size the person has chosen.
+class VxTextScaler extends TextScaler {
+  const VxTextScaler(this.base, [this.boost = 1.07]);
+  final TextScaler base;
+  final double boost;
+
+  @override
+  double scale(double fontSize) => base.scale(fontSize) * boost;
+
+  @override
+  // ignore: deprecated_member_use
+  double get textScaleFactor => base.textScaleFactor * boost;
+
+  @override
+  bool operator ==(Object other) =>
+      other is VxTextScaler && other.base == base && other.boost == boost;
+
+  @override
+  int get hashCode => Object.hash(base, boost);
+}
+
+/// Animation length, or none when the person has asked for reduced motion.
+Duration vxMotion(BuildContext context, int milliseconds) =>
+    MediaQuery.maybeDisableAnimationsOf(context) ?? false
+    ? Duration.zero
+    : Duration(milliseconds: milliseconds);

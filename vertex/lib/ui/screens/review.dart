@@ -80,7 +80,7 @@ class _ReviewFlowState extends State<ReviewFlow> {
         leadingLabel: _sent ? 'Done' : 'Cancel',
         onLeading: _cancel,
         body: AnimatedSwitcher(
-          duration: const Duration(milliseconds: 220),
+          duration: vxMotion(context, 220),
           child: _sent ? _confirmation(context) : _form(context),
         ),
         footer: _sent

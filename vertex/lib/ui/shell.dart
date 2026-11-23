@@ -6,11 +6,16 @@ import '../state/app_state.dart';
 import '../theme/tokens.dart';
 import 'screens/browse.dart';
 import 'screens/detail.dart';
+import 'router.dart';
 import 'screens/you.dart';
 import 'widgets/widgets.dart';
 
 const _wideBreakpoint = 860.0;
-const _contentMaxWidth = 760.0;
+
+/// Lists and forms read best in a narrow column; screens that lay out in
+/// two columns on desktop use the wide one.
+const _narrow = 760.0;
+const _wide = 1080.0;
 
 /// What a screen contributes to the shell around it.
 class ScreenSpec {
@@ -21,6 +26,7 @@ class ScreenSpec {
     required this.body,
     this.actions = const [],
     this.footer,
+    this.maxWidth = _narrow,
   });
   final String key;
   final String title;
@@ -28,6 +34,7 @@ class ScreenSpec {
   final Widget body;
   final List<Widget> actions;
   final Widget? footer;
+  final double maxWidth;
 }
 
 ScreenSpec _specFor(BuildContext context, AppState s) {
@@ -45,6 +52,7 @@ ScreenSpec _specFor(BuildContext context, AppState s) {
         title: f.name,
         subtitle: f.subs,
         actions: [searchBtn],
+        maxWidth: _wide,
         body: CategoryScreen(field: f),
       );
     case DetailPage(:final toolId):
@@ -54,6 +62,15 @@ ScreenSpec _specFor(BuildContext context, AppState s) {
         title: t.name,
         subtitle: t.domain,
         actions: [
+          if (shareLinkFor(t.id) case final link?)
+            VxIconButton(
+              Ph.link,
+              label: 'Copy link',
+              onTap: () async {
+                await Clipboard.setData(ClipboardData(text: link.toString()));
+                s.flash('Link copied');
+              },
+            ),
           VxIconButton(
             s.isSaved(t.id) ? PhFill.bookmarkSimple : Ph.bookmarkSimple,
             label: s.isSaved(t.id) ? 'Remove from saved' : 'Save',
@@ -61,6 +78,7 @@ ScreenSpec _specFor(BuildContext context, AppState s) {
             onTap: () => s.toggleSaved(t.id),
           ),
         ],
+        maxWidth: _wide,
         body: DetailScreen(tool: t),
         footer: DetailFooter(tool: t),
       );
@@ -86,6 +104,7 @@ ScreenSpec _specFor(BuildContext context, AppState s) {
       title: 'Vertex',
       subtitle: 'The specialist index',
       actions: [searchBtn],
+      maxWidth: _wide,
       body: const HomeScreen(),
     ),
     VxTab.fields => ScreenSpec(
@@ -93,12 +112,14 @@ ScreenSpec _specFor(BuildContext context, AppState s) {
       title: 'Fields',
       subtitle: '${cat.fields.length} fields · ${cat.tools.length} tools rated',
       actions: [searchBtn],
+      maxWidth: _wide,
       body: const FieldsScreen(),
     ),
     VxTab.compare => const ScreenSpec(
       key: 'compare',
       title: 'Head to head',
       subtitle: 'Up to three, ranked in field',
+      maxWidth: 920,
       body: CompareScreen(),
     ),
     VxTab.saved => ScreenSpec(
@@ -139,7 +160,7 @@ class Shell extends StatelessWidget {
         _Header(spec: spec, canBack: s.stack.isNotEmpty, showMark: !wide),
         Expanded(
           child: AnimatedSwitcher(
-            duration: const Duration(milliseconds: 220),
+            duration: vxMotion(context, 220),
             switchInCurve: Curves.easeOutCubic,
             transitionBuilder: (child, anim) => FadeTransition(
               opacity: anim,
@@ -154,7 +175,7 @@ class Shell extends StatelessWidget {
             layoutBuilder: (current, previous) => current ?? const SizedBox(),
             child: KeyedSubtree(
               key: ValueKey(spec.key),
-              child: _Centered(child: spec.body),
+              child: _Centered(maxWidth: spec.maxWidth, child: spec.body),
             ),
           ),
         ),
@@ -164,7 +185,7 @@ class Shell extends StatelessWidget {
               color: context.vx.bg,
               border: Border(top: BorderSide(color: context.vx.divider)),
             ),
-            child: _Centered(child: spec.footer!),
+            child: _Centered(maxWidth: spec.maxWidth, child: spec.footer!),
           ),
       ],
     );
@@ -228,14 +249,15 @@ class Shell extends StatelessWidget {
 }
 
 class _Centered extends StatelessWidget {
-  const _Centered({required this.child});
+  const _Centered({required this.child, required this.maxWidth});
   final Widget child;
+  final double maxWidth;
 
   @override
   Widget build(BuildContext context) => Align(
     alignment: Alignment.topCenter,
     child: ConstrainedBox(
-      constraints: const BoxConstraints(maxWidth: _contentMaxWidth),
+      constraints: BoxConstraints(maxWidth: maxWidth),
       child: child,
     ),
   );
@@ -255,6 +277,7 @@ class _Header extends StatelessWidget {
   Widget build(BuildContext context) {
     final s = AppScope.read(context);
     return _Centered(
+      maxWidth: spec.maxWidth,
       child: Padding(
         padding: const EdgeInsets.fromLTRB(8, 8, 6, 8),
         child: Row(
@@ -440,55 +463,69 @@ class _SideRail extends StatelessWidget {
 
 class _Toast extends StatelessWidget {
   const _Toast({required this.listenable});
-  final ValueNotifier<String?> listenable;
+  final ValueNotifier<Toast?> listenable;
 
   @override
-  Widget build(BuildContext context) => IgnorePointer(
-    child: ValueListenableBuilder<String?>(
-      valueListenable: listenable,
-      builder: (context, msg, _) => AnimatedSwitcher(
-        duration: const Duration(milliseconds: 180),
-        child: msg == null
-            ? const SizedBox.shrink()
-            : Center(
-                key: ValueKey(msg),
-                child: Semantics(
-                  liveRegion: true,
-                  child: Container(
-                    margin: const EdgeInsets.symmetric(horizontal: 20),
-                    padding: const EdgeInsets.symmetric(
-                      horizontal: 14,
-                      vertical: 10,
-                    ),
-                    decoration: BoxDecoration(
-                      color: context.vx.inverseBg,
-                      borderRadius: BorderRadius.circular(vxRadius),
-                    ),
-                    child: Row(
-                      mainAxisSize: MainAxisSize.min,
-                      children: [
-                        Icon(
-                          Ph.checkCircle,
-                          size: 16,
-                          color: context.vx.inverseFg,
+  Widget build(BuildContext context) => ValueListenableBuilder<Toast?>(
+    valueListenable: listenable,
+    builder: (context, t, _) => AnimatedSwitcher(
+      duration: vxMotion(context, 180),
+      child: t == null
+          ? const SizedBox.shrink()
+          : Center(
+              key: ValueKey(t),
+              child: Semantics(
+                liveRegion: true,
+                child: Container(
+                  margin: const EdgeInsets.symmetric(horizontal: 20),
+                  padding: EdgeInsets.fromLTRB(
+                    14,
+                    t.undo == null ? 10 : 4,
+                    t.undo == null ? 14 : 4,
+                    t.undo == null ? 10 : 4,
+                  ),
+                  decoration: BoxDecoration(
+                    color: context.vx.inverseBg,
+                    borderRadius: BorderRadius.circular(vxRadius),
+                  ),
+                  child: Row(
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      Icon(
+                        Ph.checkCircle,
+                        size: 16,
+                        color: context.vx.inverseFg,
+                      ),
+                      const SizedBox(width: 8),
+                      Flexible(
+                        child: Text(
+                          t.message,
+                          style: TextStyle(
+                            fontSize: 13,
+                            height: 1.3,
+                            color: context.vx.inverseFg,
+                          ),
                         ),
-                        const SizedBox(width: 8),
-                        Flexible(
-                          child: Text(
-                            msg,
-                            style: TextStyle(
-                              fontSize: 13,
-                              height: 1.3,
-                              color: context.vx.inverseFg,
-                            ),
+                      ),
+                      if (t.undo != null) ...[
+                        const SizedBox(width: 6),
+                        TextButton(
+                          onPressed: t.undo,
+                          style: TextButton.styleFrom(
+                            foregroundColor: context.vx.accentSoftBorder,
+                            minimumSize: const Size(56, 40),
+                          ),
+                          child: const Text(
+                            'Undo',
+                            style: TextStyle(fontWeight: FontWeight.w600),
                           ),
                         ),
                       ],
-                    ),
+                    ],
                   ),
                 ),
               ),
-      ),
+            ),
     ),
   );
 }

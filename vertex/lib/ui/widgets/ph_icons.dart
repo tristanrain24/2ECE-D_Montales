@@ -25,6 +25,7 @@ abstract final class Ph {
   static const heartbeat = IconData(0xe2ac, fontFamily: 'Phosphor');
   static const house = IconData(0xe2c2, fontFamily: 'Phosphor');
   static const info = IconData(0xe2ce, fontFamily: 'Phosphor');
+  static const link = IconData(0xe2e2, fontFamily: 'Phosphor');
   static const magnifyingGlass = IconData(0xe30c, fontFamily: 'Phosphor');
   static const megaphone = IconData(0xe324, fontFamily: 'Phosphor');
   static const minus = IconData(0xe32a, fontFamily: 'Phosphor');

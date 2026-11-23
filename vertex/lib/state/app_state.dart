@@ -43,6 +43,12 @@ class MethodPage extends VxPage {
 
 const maxCompare = 3;
 
+class Toast {
+  const Toast(this.message, {this.undo});
+  final String message;
+  final VoidCallback? undo;
+}
+
 class AppState extends ChangeNotifier {
   AppState({
     required this.catalog,
@@ -98,7 +104,7 @@ class AppState extends ChangeNotifier {
   TierFilter tierFilter = TierFilter.any;
   PriceFilter priceFilter = PriceFilter.any;
   SortOrder sort = SortOrder.tier;
-  final toast = ValueNotifier<String?>(null);
+  final toast = ValueNotifier<Toast?>(null);
   Timer? _toastTimer;
 
   bool get inIntro => introStep != null || !onboarded;
@@ -153,10 +159,12 @@ class AppState extends ChangeNotifier {
     _pending = _pending.then((_) => storage.write(snapshot)).catchError((_) {});
   }
 
-  void flash(String message) {
+  /// Shows a short confirmation. With [undo], it offers to reverse the
+  /// action and stays up a little longer.
+  void flash(String message, {VoidCallback? undo}) {
     _toastTimer?.cancel();
-    toast.value = message;
-    _toastTimer = Timer(const Duration(milliseconds: 2400), () {
+    toast.value = Toast(message, undo: undo);
+    _toastTimer = Timer(Duration(milliseconds: undo == null ? 2400 : 4500), () {
       toast.value = null;
     });
   }
@@ -220,6 +228,13 @@ class AppState extends ChangeNotifier {
     }
     notifyListeners();
     return true;
+  }
+
+  /// Pops back so that `stack[index]` is the screen showing.
+  void popTo(int index) {
+    if (index < 0 || index >= stack.length) return;
+    stack = stack.sublist(0, index + 1);
+    notifyListeners();
   }
 
   void openTool(String id) {
@@ -291,8 +306,16 @@ class AppState extends ChangeNotifier {
 
   void toggleSaved(String id) {
     if (saved.contains(id)) {
+      final before = saved;
       saved = saved.where((x) => x != id).toList();
-      flash('Removed from saved');
+      flash(
+        'Removed from saved',
+        undo: () {
+          saved = before;
+          toast.value = null;
+          _commit();
+        },
+      );
     } else {
       saved = [...saved, id];
       flash('Saved · check back after the monthly re-score');
@@ -310,8 +333,16 @@ class AppState extends ChangeNotifier {
     final tool = catalog.tool(id);
     if (tool == null) return;
     if (compare.contains(id)) {
+      final before = compare;
       compare = compare.where((x) => x != id).toList();
-      flash('Removed from compare');
+      flash(
+        'Removed from compare',
+        undo: () {
+          compare = before;
+          toast.value = null;
+          _commit();
+        },
+      );
     } else {
       final current = compareTools;
       if (current.isNotEmpty && current.first.fieldId != tool.fieldId) {

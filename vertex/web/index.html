@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<html>
+<html lang="en">
 <head>
   <!--
     If you are serving your web app in a path other than the root, change the
@@ -18,7 +18,15 @@
 
   <meta charset="UTF-8">
   <meta content="IE=Edge" http-equiv="X-UA-Compatible">
-  <meta name="description" content="Vertex — the field-ranked AI index. One rated pick per field.">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="description" content="Vertex ranks AI tools only against others in the same field, then tells you plainly which one to take.">
+  <meta name="theme-color" content="#e4e7f5" media="(prefers-color-scheme: light)">
+  <meta name="theme-color" content="#161826" media="(prefers-color-scheme: dark)">
+  <meta property="og:type" content="website">
+  <meta property="og:title" content="Vertex — one rated pick per field">
+  <meta property="og:description" content="AI tools ranked only against others in the same field, with a plain verdict on which one to take.">
+  <meta property="og:image" content="icons/Icon-512.png">
+  <meta name="twitter:card" content="summary">
 
   <!--
     Uncomment the tag below to lay the app out underneath the parts of the
@@ -34,7 +42,7 @@
 
   <!-- iOS meta tags & icons -->
   <meta name="mobile-web-app-capable" content="yes">
-  <meta name="apple-mobile-web-app-status-bar-style" content="black">
+  <meta name="apple-mobile-web-app-status-bar-style" content="default">
   <meta name="apple-mobile-web-app-title" content="Vertex">
   <link rel="apple-touch-icon" href="icons/Icon-192.png">
 
@@ -43,8 +51,32 @@
 
   <title>Vertex</title>
   <link rel="manifest" href="manifest.json">
+  <style>
+    /* Matches the app's background so nothing flashes white while it loads. */
+    html, body { margin: 0; height: 100%; background: #e4e7f5; color: #4e5262;
+      font: 15px/1.5 system-ui, -apple-system, "Segoe UI", Roboto, sans-serif; }
+    @media (prefers-color-scheme: dark) { html, body { background: #161826; color: #b2b6ca; } }
+    #loading { position: fixed; inset: 0; display: flex; flex-direction: column;
+      align-items: center; justify-content: center; gap: 14px; }
+    #loading img { width: 56px; height: 56px; border-radius: 13px; }
+    @media (prefers-reduced-motion: no-preference) {
+      #loading img { animation: pulse 1.4s ease-in-out infinite; }
+      @keyframes pulse { 50% { opacity: .55; } }
+    }
+  </style>
 </head>
 <body>
+  <div id="loading" role="status">
+    <img src="icons/Icon-192.png" alt="" width="56" height="56">
+    <span>Loading Vertex…</span>
+  </div>
+  <noscript>Vertex needs JavaScript turned on to run in a browser.</noscript>
+  <script>
+    window.addEventListener('flutter-first-frame', function () {
+      var el = document.getElementById('loading');
+      if (el) el.remove();
+    });
+  </script>
   <!--
     You can customize the "flutter_bootstrap.js" script.
     This is useful to provide a custom configuration to the Flutter loader

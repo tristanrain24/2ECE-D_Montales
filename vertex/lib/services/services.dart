@@ -9,13 +9,15 @@ import '../data/models.dart';
 
 // ───────── catalog ─────────
 
-/// Where the app downloads ratings from on launch. Editing this file on the
-/// repository's main branch updates every installed copy of the app.
-/// Override at build time with `--dart-define=CATALOG_URL=https://…`.
-const catalogUrl = String.fromEnvironment(
-  'CATALOG_URL',
-  defaultValue: 'https://raw.githubusercontent.com/tristanrain24/2ECE-D_Montales/main/vertex/assets/data/catalog.json',
-);
+/// Where the app downloads updated ratings on launch. Empty (the default)
+/// keeps the app fully offline on its bundled ratings, which suits a private
+/// project. To turn updates on, publish catalog.json at a URL the app can
+/// read and build with `--dart-define=CATALOG_URL=https://…/catalog.json`.
+const catalogUrl = String.fromEnvironment('CATALOG_URL');
+
+/// Address of a published web version, used for links shared from the
+/// native apps. Empty while the project is private: there is no public site.
+const webAppUrl = String.fromEnvironment('WEB_APP_URL');
 
 /// Loads the catalog the app starts with, then looks for a newer one.
 ///

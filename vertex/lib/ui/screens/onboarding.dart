@@ -23,7 +23,7 @@ class Onboarding extends StatelessWidget {
             child: ConstrainedBox(
               constraints: const BoxConstraints(maxWidth: 540),
               child: AnimatedSwitcher(
-                duration: const Duration(milliseconds: 260),
+                duration: vxMotion(context, 260),
                 child: KeyedSubtree(
                   key: ValueKey(step),
                   child: switch (step) {
@@ -94,7 +94,9 @@ class _Welcome extends StatelessWidget {
                         color: c.textSecondary,
                       ),
                     ),
-                    const SizedBox(height: 26),
+                    const SizedBox(height: 22),
+                    const _RankShift(),
+                    const SizedBox(height: 22),
                     Wrap(
                       spacing: 22,
                       runSpacing: 12,
@@ -303,6 +305,80 @@ class _RoleStep extends StatelessWidget {
           onTap: s.finishIntro,
         ),
       ],
+    );
+  }
+}
+
+/// The idea in one picture: the same tool, buried in an all-AI list and
+/// first in its own field.
+class _RankShift extends StatelessWidget {
+  const _RankShift();
+
+  @override
+  Widget build(BuildContext context) {
+    final c = context.vx;
+    Widget row({
+      required String rank,
+      required String where,
+      required bool ours,
+    }) => Padding(
+      padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
+      child: Row(
+        children: [
+          ConstrainedBox(
+            constraints: const BoxConstraints(minWidth: 46),
+            child: Text(
+              rank,
+              style: TextStyle(
+                fontSize: 20,
+                fontWeight: FontWeight.w600,
+                fontFeatures: const [FontFeature.tabularFigures()],
+                color: ours ? c.accentFg : c.textMuted,
+              ),
+            ),
+          ),
+          const SizedBox(width: 6),
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  'A CAD copilot',
+                  style: VxText.title(context)
+                      .copyWith(color: ours ? c.text : c.textSecondary),
+                ),
+                const SizedBox(height: 2),
+                Text(where, style: VxText.muted(context)),
+              ],
+            ),
+          ),
+          if (ours) const TierBadge(Tier.a, word: false),
+        ],
+      ),
+    );
+    return Semantics(
+      label:
+          'Example: a CAD copilot ranks 14th in a list of every AI tool, '
+          'and first when ranked only against engineering tools.',
+      excludeSemantics: true,
+      child: VxCard(
+        padding: EdgeInsets.zero,
+        child: Column(
+          children: [
+            row(
+              rank: '#14',
+              where: 'Ranked against every AI tool',
+              ours: false,
+            ),
+            Divider(height: 1, color: c.divider),
+            row(
+              rank: '#1',
+              where: 'Ranked on Vertex, in Engineering',
+              ours: true,
+            ),
+          ],
+        ),
+      ),
     );
   }
 }

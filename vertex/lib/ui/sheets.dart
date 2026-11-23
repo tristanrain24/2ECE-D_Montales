@@ -13,8 +13,8 @@ Future<T?> showVxSheet<T>(BuildContext context, WidgetBuilder builder) {
       barrierColor: scrim,
       barrierDismissible: false,
       fullscreenDialog: true,
-      transitionDuration: const Duration(milliseconds: 320),
-      reverseTransitionDuration: const Duration(milliseconds: 240),
+      transitionDuration: vxMotion(context, 320),
+      reverseTransitionDuration: vxMotion(context, 240),
       pageBuilder: (ctx, _, _) => _SheetFrame(child: builder(ctx)),
       transitionsBuilder: (ctx, anim, _, child) => SlideTransition(
         position: Tween(

@@ -1,7 +1,10 @@
 name: Vertex
 
-# Tests the app and builds it for Android, iOS, macOS and Windows.
-# Pushing a tag like v1.0.0 also publishes the builds as a GitHub Release.
+# Every push runs the tests. The Android, iOS, macOS and Windows builds run
+# only when started by hand (Actions → Vertex → Run workflow) or by pushing a
+# tag like v1.0.0, which also attaches them to a GitHub Release. In a private
+# repository, Actions time is limited on the free plan and macOS jobs count
+# ten times over, so the platform builds don't run on every push.
 
 on:
   push:
@@ -50,6 +53,7 @@ jobs:
   android:
     name: Android (APK + App Bundle)
     needs: test
+    if: github.event_name == 'workflow_dispatch' || startsWith(github.ref, 'refs/tags/v')
     runs-on: ubuntu-latest
     timeout-minutes: 40
     env:
@@ -95,6 +99,7 @@ jobs:
   windows:
     name: Windows (x64)
     needs: test
+    if: github.event_name == 'workflow_dispatch' || startsWith(github.ref, 'refs/tags/v')
     runs-on: windows-latest
     timeout-minutes: 40
     steps:
@@ -120,6 +125,7 @@ jobs:
   macos:
     name: macOS (universal)
     needs: test
+    if: github.event_name == 'workflow_dispatch' || startsWith(github.ref, 'refs/tags/v')
     runs-on: macos-latest
     timeout-minutes: 40
     steps:
@@ -145,6 +151,7 @@ jobs:
   ios:
     name: iOS (unsigned)
     needs: test
+    if: github.event_name == 'workflow_dispatch' || startsWith(github.ref, 'refs/tags/v')
     runs-on: macos-latest
     timeout-minutes: 40
     steps:

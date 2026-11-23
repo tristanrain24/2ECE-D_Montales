@@ -179,7 +179,7 @@ class VxButton extends StatelessWidget {
       VxButtonKind.solid => (c.inverseFg, c.inverseBg, c.inverseBg),
       VxButtonKind.danger => (c.danger, Colors.transparent, c.border),
     };
-    final height = dense ? 36.0 : (block ? 50.0 : 42.0);
+    final height = dense ? 36.0 : (block ? 50.0 : 44.0);
     final child = Row(
       mainAxisSize: block ? MainAxisSize.max : MainAxisSize.min,
       mainAxisAlignment: MainAxisAlignment.center,
@@ -597,7 +597,7 @@ class MetricBar extends StatelessWidget {
     final c = context.vx;
     return TweenAnimationBuilder<double>(
       tween: Tween(begin: 0, end: 1),
-      duration: const Duration(milliseconds: 700),
+      duration: vxMotion(context, 700),
       curve: Curves.easeOutCubic,
       builder: (context, k, _) => SizedBox(
         height: 18,

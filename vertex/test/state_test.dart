@@ -5,6 +5,7 @@ import 'package:material_ui/material_ui.dart' show ThemeMode;
 import 'package:vertex/data/models.dart';
 import 'package:vertex/services/services.dart';
 import 'package:vertex/state/app_state.dart';
+import 'package:vertex/ui/router.dart';
 
 import 'logic_test.dart' show loadCatalog;
 
@@ -115,7 +116,7 @@ void main() {
       s.toggleCompare(id);
     }
     expect(s.compare, ['solidum', 'circuitry', 'femwise']);
-    expect(s.toast.value, contains('holds three'));
+    expect(s.toast.value?.message, contains('holds three'));
     s.toggleCompare('cortexa');
     expect(s.compare, ['cortexa']);
     s.toggleCompare('cortexa');
@@ -178,7 +179,7 @@ void main() {
       links: FakeLinks(ok: false),
     );
     await failing.visitVendor(failing.catalog.tool('solidum')!);
-    expect(failing.toast.value, 'Couldn’t open solidum.ai');
+    expect(failing.toast.value?.message, 'Couldn’t open solidum.ai');
     failing.dispose();
   });
 
@@ -192,5 +193,86 @@ void main() {
     expect(s.inIntro, isTrue);
     expect(s.saved, isEmpty);
     s.dispose();
+  });
+
+  test('undo restores a removed saved tool or compare entry', () async {
+    final s = await newState(MemoryStorage());
+    s.toggleSaved('solidum');
+    s.toggleSaved('circuitry');
+    s.toggleSaved('solidum');
+    expect(s.saved, ['circuitry']);
+    s.toast.value!.undo!();
+    expect(s.saved, ['solidum', 'circuitry']);
+    expect(s.toast.value, isNull);
+    s.toggleCompare('solidum');
+    s.toggleCompare('solidum');
+    s.toast.value!.undo!();
+    expect(s.compare, ['solidum']);
+    expect(s.toast.value, isNull);
+    s.toggleCompare('circuitry');
+    expect(s.toast.value!.undo, isNull);
+    s.dispose();
+  });
+
+  group('web addresses', () {
+    test('every screen has one', () async {
+      final s = await newState(MemoryStorage());
+      expect(locationOf(s), '/welcome');
+      s.finishIntro();
+      expect(locationOf(s), '/');
+      s.setTab(VxTab.saved);
+      expect(locationOf(s), '/saved');
+      s.openField('law');
+      expect(locationOf(s), '/field/law');
+      s.openTool('precedent');
+      expect(locationOf(s), '/tool/precedent');
+      s.push(const MethodPage());
+      expect(locationOf(s), '/method');
+      s.dispose();
+    });
+
+    test(
+      'back and forward keep the stack; links open where they point',
+      () async {
+        final s = await newState(MemoryStorage());
+        s.finishIntro();
+        s.openField('eng');
+        s.openTool('solidum');
+        applyLocation(s, Uri(path: '/field/eng'));
+        expect(s.stack, hasLength(1));
+        expect(locationOf(s), '/field/eng');
+        applyLocation(s, Uri(path: '/tool/solidum'));
+        expect(s.stack, hasLength(2));
+        applyLocation(s, Uri(path: '/compare'));
+        expect(locationOf(s), '/compare');
+        applyLocation(s, Uri(path: '/tool/nope'));
+        expect(locationOf(s), '/');
+        applyLocation(s, Uri(path: '/field/med'));
+        expect(s.field.id, 'med');
+        s.dispose();
+      },
+    );
+
+    test('a shared link skips the intro; a bare visit keeps it', () async {
+      final s = await newState(MemoryStorage());
+      applyLocation(s, Uri(path: '/'));
+      expect(s.inIntro, isTrue);
+      applyLocation(s, Uri(path: '/tool/cortexa'));
+      expect(s.inIntro, isFalse);
+      expect(locationOf(s), '/tool/cortexa');
+      s.dispose();
+    });
+
+    test('share links need a web version to point at', () {
+      expect(shareLinkFor('solidum', web: false, site: ''), isNull);
+      expect(
+        shareLinkFor(
+          'solidum',
+          web: false,
+          site: 'https://example.test/vertex/',
+        ).toString(),
+        'https://example.test/vertex/#/tool/solidum',
+      );
+    });
   });
 }

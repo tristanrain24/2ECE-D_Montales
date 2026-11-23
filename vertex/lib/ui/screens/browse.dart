@@ -21,8 +21,15 @@ LinearGradient heroGradient(BuildContext context) => LinearGradient(
 /// Tier, name, sub-discipline and a chevron — the standard way a tool is
 /// listed.
 class ToolRow extends StatelessWidget {
-  const ToolRow(this.tool, {super.key, this.subtitle, this.trailing});
+  const ToolRow(
+    this.tool, {
+    super.key,
+    this.subtitle,
+    this.trailing,
+    this.chevron = true,
+  });
   final Tool tool;
+  final bool chevron;
   final String? subtitle;
   final Widget? trailing;
 
@@ -38,12 +45,69 @@ class ToolRow extends StatelessWidget {
     title: tool.name,
     subtitle: subtitle ?? tool.sub,
     trailing: trailing,
-    chevron: true,
+    chevron: chevron,
     onTap: () => AppScope.read(context).openTool(tool.id),
   );
 }
 
 // ───────── home ─────────
+
+/// Two columns from this content width up; one column below it.
+const twoColumnWidth = 860.0;
+
+/// Keeps running text near 65 characters a line on wide screens.
+class Prose extends StatelessWidget {
+  const Prose(this.child, {super.key});
+  final Widget child;
+
+  @override
+  Widget build(BuildContext context) => Align(
+    alignment: Alignment.centerLeft,
+    child: ConstrainedBox(
+      constraints: const BoxConstraints(maxWidth: 640),
+      child: child,
+    ),
+  );
+}
+
+/// Stacks [main] above [side] on phones; puts them side by side on desktop.
+class SplitLayout extends StatelessWidget {
+  const SplitLayout({super.key, required this.main, required this.side});
+  final List<Widget> main;
+  final List<Widget> side;
+
+  @override
+  Widget build(BuildContext context) => LayoutBuilder(
+    builder: (context, box) {
+      if (box.maxWidth < twoColumnWidth) {
+        return ListView(padding: pagePadding, children: [...main, ...side]);
+      }
+      return SingleChildScrollView(
+        padding: pagePadding,
+        child: Row(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Expanded(
+              flex: 3,
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.stretch,
+                children: main,
+              ),
+            ),
+            const SizedBox(width: 32),
+            Expanded(
+              flex: 2,
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.stretch,
+                children: side,
+              ),
+            ),
+          ],
+        ),
+      );
+    },
+  );
+}
 
 class HomeScreen extends StatelessWidget {
   const HomeScreen({super.key});
@@ -56,9 +120,9 @@ class HomeScreen extends StatelessWidget {
     final hero = ranked.first;
     final runners = ranked.skip(1).take(3).toList();
     final isA = hero.tier == Tier.a;
-    return ListView(
-      padding: pagePadding,
-      children: [
+    final lead = hero.accuracy - s.field.median[Metric.accuracy]!;
+    return SplitLayout(
+      main: [
         const SizedBox(height: 8),
         if (s.catalog.sample) ...[
           const Notice(
@@ -74,13 +138,16 @@ class HomeScreen extends StatelessWidget {
         Row(
           children: [
             Expanded(
-              child: Text(
-                s.role == null ? 'Here’s the call.' : 'Here’s your call.',
-                style: VxText.display(context, size: 25),
+              child: Semantics(
+                header: true,
+                child: Text(
+                  s.role == null ? 'Here’s the call.' : 'Here’s your call.',
+                  style: VxText.display(context, size: 26),
+                ),
               ),
             ),
             VxButton(
-              'Change',
+              'Change field',
               dense: true,
               onTap: () => s.setTab(VxTab.fields),
             ),
@@ -88,69 +155,120 @@ class HomeScreen extends StatelessWidget {
         ),
         const SizedBox(height: 16),
         VxCard(
-          padding: const EdgeInsets.all(18),
+          padding: EdgeInsets.zero,
           gradient: isA ? heroGradient(context) : null,
           borderColor: isA ? c.accentSoftBorder : null,
           onTap: () => s.openTool(hero.id),
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
+          semanticLabel: 'Top pick: ${hero.name}',
+          child: Stack(
             children: [
-              TierBadge(hero.tier, big: true),
-              const SizedBox(height: 14),
-              Text(hero.name, style: VxText.display(context, size: 30)),
-              const SizedBox(height: 2),
-              Text(hero.sub, style: VxText.secondary(context)),
-              const SizedBox(height: 14),
-              Text(
-                hero.verdict,
-                style: TextStyle(fontSize: 14.5, height: 1.5, color: c.text),
-              ),
-              const SizedBox(height: 16),
-              Wrap(
-                crossAxisAlignment: WrapCrossAlignment.center,
-                spacing: 16,
-                runSpacing: 6,
-                children: [
-                  Text(
-                    leadPrice(hero, s.role),
+              // The tier letter, set large: the one signature mark on Home.
+              Positioned(
+                right: 14,
+                top: -18,
+                child: ExcludeSemantics(
+                  child: Text(
+                    hero.tier.label,
                     style: TextStyle(
-                      fontSize: 13,
-                      fontWeight: FontWeight.w500,
-                      color: c.accentFg,
+                      fontSize: 150,
+                      height: 1,
+                      fontWeight: FontWeight.w600,
+                      letterSpacing: -6,
+                      color: isA ? c.accentSoftBorder : c.neutralSoft,
                     ),
                   ),
-                  Text.rich(
-                    TextSpan(
-                      text: 'See the full report ',
+                ),
+              ),
+              Padding(
+                padding: const EdgeInsets.all(20),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    TierBadge(hero.tier, big: true),
+                    const SizedBox(height: 16),
+                    Text(hero.name, style: VxText.display(context, size: 34)),
+                    const SizedBox(height: 2),
+                    Text(hero.sub, style: VxText.secondary(context)),
+                    const SizedBox(height: 14),
+                    Prose(
+                      Text(
+                        hero.verdict,
+                        style: TextStyle(
+                          fontSize: 15,
+                          height: 1.55,
+                          color: c.text,
+                        ),
+                      ),
+                    ),
+                    if (lead > 0) ...[
+                      const SizedBox(height: 14),
+                      Row(
+                        children: [
+                          Container(width: 2, height: 14, color: c.neutralFg),
+                          const SizedBox(width: 8),
+                          Flexible(
+                            child: Text(
+                              '+$lead accuracy over the ${s.field.name} median',
+                              style: VxText.secondary(context, size: 12.5),
+                            ),
+                          ),
+                        ],
+                      ),
+                    ],
+                    const SizedBox(height: 18),
+                    Wrap(
+                      crossAxisAlignment: WrapCrossAlignment.center,
+                      spacing: 16,
+                      runSpacing: 6,
                       children: [
-                        WidgetSpan(
-                          alignment: PlaceholderAlignment.middle,
-                          child: Icon(
-                            Ph.arrowRight,
-                            size: 14,
+                        Text(
+                          leadPrice(hero, s.role),
+                          style: TextStyle(
+                            fontSize: 13,
+                            fontWeight: FontWeight.w500,
                             color: c.accentFg,
                           ),
                         ),
+                        Text.rich(
+                          TextSpan(
+                            text: 'See the full report ',
+                            children: [
+                              WidgetSpan(
+                                alignment: PlaceholderAlignment.middle,
+                                child: Icon(
+                                  Ph.arrowRight,
+                                  size: 14,
+                                  color: c.accentFg,
+                                ),
+                              ),
+                            ],
+                          ),
+                          style: TextStyle(fontSize: 13, color: c.accentFg),
+                        ),
                       ],
                     ),
-                    style: TextStyle(fontSize: 13, color: c.accentFg),
-                  ),
-                ],
+                  ],
+                ),
               ),
             ],
           ),
         ),
         const SizedBox(height: 22),
-        Row(
-          children: [
-            const Expanded(child: Kicker('Runners-up')),
-            VxButton(
-              'All ${ranked.length}',
-              kind: VxButtonKind.ghost,
-              dense: true,
-              onTap: () => s.openField(s.field.id),
-            ),
-          ],
+      ],
+      side: [
+        Padding(
+          padding: const EdgeInsets.only(top: 8),
+          child: Row(
+            children: [
+              const Expanded(child: Kicker('Runners-up')),
+              VxButton(
+                'All ${ranked.length}',
+                kind: VxButtonKind.ghost,
+                dense: true,
+                onTap: () => s.openField(s.field.id),
+              ),
+            ],
+          ),
         ),
         const SizedBox(height: 4),
         if (runners.isEmpty)
@@ -190,7 +308,7 @@ class FieldsScreen extends StatelessWidget {
     final c = context.vx;
     return LayoutBuilder(
       builder: (context, box) {
-        final cols = box.maxWidth >= 620 ? 2 : 1;
+        final cols = box.maxWidth >= 940 ? 3 : (box.maxWidth >= 620 ? 2 : 1);
         const gap = 10.0;
         final w = (box.maxWidth - 36 - gap * (cols - 1)) / cols;
         return ListView(
@@ -365,38 +483,86 @@ class CategoryScreen extends StatelessWidget {
             message: 'Nothing clears that filter in this field.',
             action: VxButton('Reset filters', onTap: s.clearFilters),
           ),
-        for (final t in results)
+        if (results.isNotEmpty)
           Padding(
-            padding: const EdgeInsets.fromLTRB(18, 0, 18, 10),
-            child: VxCard(
-              onTap: () => s.openTool(t.id),
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  SizedBox(
-                    width: double.infinity,
-                    child: Wrap(
-                      alignment: WrapAlignment.spaceBetween,
-                      crossAxisAlignment: WrapCrossAlignment.center,
-                      spacing: 12,
-                      runSpacing: 6,
-                      children: [
-                        TierBadge(t.tier),
-                        Text(t.price, style: VxText.secondary(context)),
-                      ],
-                    ),
-                  ),
-                  const SizedBox(height: 10),
-                  Text(t.name, style: VxText.title(context, size: 18)),
-                  const SizedBox(height: 1),
-                  Text(t.sub, style: VxText.muted(context)),
-                  const SizedBox(height: 8),
-                  Text(t.verdict, style: VxText.secondary(context, size: 13.5)),
-                ],
-              ),
+            padding: const EdgeInsets.symmetric(horizontal: 18),
+            child: LayoutBuilder(
+              builder: (context, box) {
+                const gap = 12.0;
+                final cols = box.maxWidth >= 700 ? 2 : 1;
+                final w = (box.maxWidth - gap * (cols - 1)) / cols;
+                return Wrap(
+                  spacing: gap,
+                  runSpacing: gap,
+                  children: [
+                    for (final t in results)
+                      SizedBox(
+                        width: w,
+                        child: _ToolCard(tool: t, field: field),
+                      ),
+                  ],
+                );
+              },
             ),
           ),
       ],
+    );
+  }
+}
+
+class _ToolCard extends StatelessWidget {
+  const _ToolCard({required this.tool, required this.field});
+  final Tool tool;
+  final Field field;
+
+  @override
+  Widget build(BuildContext context) {
+    final t = tool;
+    final c = context.vx;
+    final diff = t.accuracy - field.median[Metric.accuracy]!;
+    return VxCard(
+      onTap: () => AppScope.read(context).openTool(t.id),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          SizedBox(
+            width: double.infinity,
+            child: Wrap(
+              alignment: WrapAlignment.spaceBetween,
+              crossAxisAlignment: WrapCrossAlignment.center,
+              spacing: 12,
+              runSpacing: 6,
+              children: [
+                TierBadge(t.tier),
+                Text(t.price, style: VxText.secondary(context)),
+              ],
+            ),
+          ),
+          const SizedBox(height: 10),
+          Text(t.name, style: VxText.title(context, size: 18)),
+          const SizedBox(height: 1),
+          Text(t.sub, style: VxText.muted(context)),
+          const SizedBox(height: 8),
+          Text(t.verdict, style: VxText.secondary(context, size: 13.5)),
+          const SizedBox(height: 12),
+          Row(
+            children: [
+              Container(width: 2, height: 12, color: c.neutralFg),
+              const SizedBox(width: 7),
+              Flexible(
+                child: Text(
+                  'Accuracy ${t.accuracy} · ${diff >= 0 ? '+' : ''}$diff vs field median',
+                  style: TextStyle(
+                    fontSize: 12,
+                    fontWeight: FontWeight.w500,
+                    color: diff >= 0 ? c.accentFg : c.textMuted,
+                  ),
+                ),
+              ),
+            ],
+          ),
+        ],
+      ),
     );
   }
 }
@@ -584,6 +750,8 @@ class CompareScreen extends StatelessWidget {
     final rows = compareRows(tools);
     final winner = compareWinner(tools)!;
     final field = s.catalog.fieldOf(tools.first);
+    // On phones each label sits above its row so the values get the width.
+    final stacked = MediaQuery.sizeOf(context).width < 560;
     const labelFlex = 5;
     const cellFlex = 6;
     return ListView(
@@ -595,38 +763,57 @@ class CompareScreen extends StatelessWidget {
         Row(
           crossAxisAlignment: CrossAxisAlignment.end,
           children: [
-            const Spacer(flex: labelFlex),
+            if (!stacked) const Spacer(flex: labelFlex),
             for (final t in tools)
               Expanded(
                 flex: cellFlex,
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Transform.translate(
-                      offset: const Offset(-13, 0),
-                      child: VxIconButton(
-                        Ph.x,
-                        size: 15,
-                        label: 'Remove ${t.name} from compare',
-                        onTap: () => s.toggleCompare(t.id),
-                      ),
-                    ),
-                    Semantics(
-                      button: true,
-                      child: InkWell(
-                        onTap: () => s.openTool(t.id),
-                        child: Padding(
-                          padding: const EdgeInsets.only(bottom: 8, right: 6),
-                          child: Text(
-                            t.name,
-                            maxLines: 2,
-                            overflow: TextOverflow.ellipsis,
-                            style: VxText.title(context, size: 15.5),
+                child: Padding(
+                  padding: const EdgeInsets.only(right: 4, bottom: 6),
+                  child: LayoutBuilder(
+                    builder: (context, box) {
+                      final name = Semantics(
+                        button: true,
+                        child: InkWell(
+                          onTap: () => s.openTool(t.id),
+                          borderRadius: BorderRadius.circular(vxRadiusSm),
+                          child: Padding(
+                            padding: const EdgeInsets.symmetric(vertical: 6),
+                            child: Text(
+                              t.name,
+                              maxLines: 2,
+                              style: VxText.title(context, size: 15.5),
+                            ),
                           ),
                         ),
-                      ),
-                    ),
-                  ],
+                      );
+                      final remove = VxIconButton(
+                        Ph.x,
+                        size: 14,
+                        label: 'Remove ${t.name} from compare',
+                        onTap: () => s.toggleCompare(t.id),
+                      );
+                      // Narrow columns stack the remove button above the
+                      // name so the name never breaks mid-word.
+                      if (box.maxWidth < 130) {
+                        return Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            Transform.translate(
+                              offset: const Offset(-13, 0),
+                              child: remove,
+                            ),
+                            name,
+                          ],
+                        );
+                      }
+                      return Row(
+                        children: [
+                          Flexible(child: name),
+                          remove,
+                        ],
+                      );
+                    },
+                  ),
                 ),
               ),
           ],
@@ -638,44 +825,64 @@ class CompareScreen extends StatelessWidget {
               border: Border(bottom: BorderSide(color: c.divider)),
             ),
             padding: const EdgeInsets.symmetric(vertical: 10),
-            child: Row(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                Expanded(
-                  flex: labelFlex,
-                  child: Text(r.label, style: VxText.muted(context)),
-                ),
-                for (var i = 0; i < r.values.length; i++)
-                  Expanded(
-                    flex: cellFlex,
-                    child: Semantics(
-                      label: r.best.contains(i) ? 'Best' : null,
-                      child: Row(
-                        children: [
-                          Flexible(
-                            child: Text(
-                              r.values[i],
-                              style: TextStyle(
-                                fontSize: 14,
-                                height: 1.3,
-                                fontWeight: FontWeight.w500,
-                                color: r.best.contains(i) ? c.accentFg : c.text,
+                if (stacked)
+                  Padding(
+                    padding: const EdgeInsets.only(bottom: 4),
+                    child: Text(r.label, style: VxText.muted(context)),
+                  ),
+                Row(
+                  children: [
+                    if (!stacked)
+                      Expanded(
+                        flex: labelFlex,
+                        child: Text(r.label, style: VxText.muted(context)),
+                      ),
+                    for (var i = 0; i < r.values.length; i++)
+                      Expanded(
+                        flex: cellFlex,
+                        child: Align(
+                          alignment: Alignment.centerLeft,
+                          child: Semantics(
+                            label: r.best.contains(i) ? 'Best' : null,
+                            child: Container(
+                              margin: const EdgeInsets.only(right: 4),
+                              padding: r.best.contains(i)
+                                  ? const EdgeInsets.symmetric(
+                                      horizontal: 8,
+                                      vertical: 4,
+                                    )
+                                  : const EdgeInsets.symmetric(vertical: 4),
+                              decoration: r.best.contains(i)
+                                  ? BoxDecoration(
+                                      color: c.accentSoft,
+                                      border: Border.all(
+                                        color: c.accentSoftBorder,
+                                      ),
+                                      borderRadius: BorderRadius.circular(
+                                        vxRadiusSm,
+                                      ),
+                                    )
+                                  : null,
+                              child: Text(
+                                r.values[i],
+                                style: TextStyle(
+                                  fontSize: 14,
+                                  height: 1.3,
+                                  fontWeight: FontWeight.w500,
+                                  color: r.best.contains(i)
+                                      ? c.accentFg
+                                      : c.text,
+                                ),
                               ),
                             ),
                           ),
-                          if (r.best.contains(i))
-                            Container(
-                              width: 6,
-                              height: 6,
-                              margin: const EdgeInsets.only(left: 6, right: 4),
-                              decoration: BoxDecoration(
-                                color: c.accent,
-                                shape: BoxShape.circle,
-                              ),
-                            ),
-                        ],
+                        ),
                       ),
-                    ),
-                  ),
+                  ],
+                ),
               ],
             ),
           ),
@@ -754,13 +961,27 @@ class SavedScreen extends StatelessWidget {
               ToolRow(
                 t,
                 subtitle: '${s.catalog.fieldOf(t).name} · ${t.price}',
-                trailing: Text(
-                  moveNote(t.move),
-                  style: TextStyle(
-                    fontSize: 12,
-                    fontWeight: t.move == 0 ? FontWeight.w400 : FontWeight.w500,
-                    color: t.move > 0 ? c.accentFg : c.textMuted,
-                  ),
+                chevron: false,
+                trailing: Row(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    Text(
+                      moveNote(t.move),
+                      style: TextStyle(
+                        fontSize: 12,
+                        fontWeight: t.move == 0
+                            ? FontWeight.w400
+                            : FontWeight.w500,
+                        color: t.move > 0 ? c.accentFg : c.textMuted,
+                      ),
+                    ),
+                    VxIconButton(
+                      Ph.x,
+                      size: 15,
+                      label: 'Remove ${t.name} from saved',
+                      onTap: () => s.toggleSaved(t.id),
+                    ),
+                  ],
                 ),
               ),
           ],
